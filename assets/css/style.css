@@ -44,18 +44,6 @@ body {
 .nav-brand .logo-icon { font-size: 1.5rem; }
 .nav-brand span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .nav-right { display: flex; align-items: center; gap: 1rem; }
-.nav-center {
-  position: absolute; left: 50%; transform: translateX(-50%);
-  display: flex; align-items: center;
-}
-.screen-name-label {
-  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em;
-  color: var(--muted);
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 4px 14px;
-}
 .badge {
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   padding: 4px 12px; border-radius: 20px;
