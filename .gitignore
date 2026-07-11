@@ -1,0 +1,23 @@
+# アップロードされた画像（ユーザーがアップロードしたもの）は管理しない
+assets/images/restaurant_*.jpg
+assets/images/restaurant_*.jpeg
+assets/images/restaurant_*.png
+assets/images/restaurant_*.gif
+assets/images/restaurant_*.webp
+
+# 初期画像（AI生成・プロジェクト固有）は管理する
+# ramen.png, burger.png, sushi.png, pizza.png, curry.png, korean_bbq.png → 管理対象
+
+# XAMPP・OS関連
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# エディタ関連
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ログ
+*.log
