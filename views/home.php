@@ -14,6 +14,9 @@
       <span class="logo-icon">🍜</span>
       <span>FoodLog</span>
     </a>
+    <div class="nav-center">
+      <span class="screen-name-label">🏠 ホーム画面</span>
+    </div>
     <div class="nav-right">
       <span class="badge" id="total-reviews-badge">0 Reviews</span>
     </div>

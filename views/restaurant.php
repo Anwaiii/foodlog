@@ -13,6 +13,9 @@
       <span class="logo-icon">🍜</span>
       <span>FoodLog</span>
     </a>
+    <div class="nav-center">
+      <span class="screen-name-label">🍽️ レストラン詳細画面</span>
+    </div>
     <div class="nav-right">
       <span class="badge" id="review-count-badge">0 Reviews</span>
     </div>
