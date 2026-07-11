@@ -5,6 +5,7 @@ const GRADIENTS = [
   'linear-gradient(135deg, #0d1a00 0%, #3a5e00 100%)',
 ];
 
+// ─── URLパラメータ ────────────────────────────────────────────────────────────
 const params = new URLSearchParams(window.location.search);
 const restaurantId = params.get('id');
 if (!restaurantId) window.location.href = '/foodlog/';
@@ -12,34 +13,53 @@ if (!restaurantId) window.location.href = '/foodlog/';
 const today = new Date().toISOString().split('T')[0];
 document.getElementById('rv-date').value = today;
 
+// 現在のレストランデータをキャッシュ
+let currentRestaurant = null;
+let restaurantList = [];
+
+// ─── レストラン情報の読み込み ─────────────────────────────────────────────────
 async function loadRestaurant() {
   const res = await fetch('/foodlog/api/restaurants.php');
-  const list = await res.json();
-  const r = list.find(x => String(x.id) === String(restaurantId));
+  restaurantList = await res.json();
+  const r = restaurantList.find(x => String(x.id) === String(restaurantId));
   if (!r) { document.getElementById('detail-name').textContent = 'Not found'; return; }
+  currentRestaurant = r;
+  renderRestaurantInfo(r);
+}
 
+function renderRestaurantInfo(r) {
   document.title = r.name + ' — FoodLog';
   document.getElementById('detail-category').textContent = r.category || '';
   document.getElementById('detail-name').textContent = r.name;
   document.getElementById('detail-desc').textContent = r.description || '';
 
-  const idx = list.indexOf(r);
+  const idx = restaurantList.indexOf(r);
+  const bannerImg = document.getElementById('banner-img');
+  const placeholder = document.getElementById('banner-placeholder');
+
   if (r.image) {
-    const img = document.getElementById('banner-img');
-    img.src = `/foodlog/${r.image}`; img.alt = r.name; img.style.display = 'block';
-    img.onerror = () => { img.style.display = 'none'; showPlaceholder(idx, r.emoji); };
+    bannerImg.src = `/foodlog/${r.image}`;
+    bannerImg.alt = r.name;
+    bannerImg.style.display = 'block';
+    placeholder.style.display = 'none';
+    bannerImg.onerror = () => {
+      bannerImg.style.display = 'none';
+      showPlaceholder(idx);
+    };
   } else {
-    showPlaceholder(idx, r.emoji);
+    bannerImg.style.display = 'none';
+    showPlaceholder(idx);
   }
 }
 
-function showPlaceholder(idx, emoji) {
+function showPlaceholder(idx) {
   const el = document.getElementById('banner-placeholder');
   el.style.background = GRADIENTS[idx % GRADIENTS.length];
   el.style.display = 'flex';
-  el.textContent = emoji || '🍽️';
+  el.textContent = '🍽️';
 }
 
+// ─── レビューの読み込み・描画 ─────────────────────────────────────────────────
 async function loadReviews() {
   const res = await fetch(`/foodlog/api/reviews.php?restaurant_id=${restaurantId}`);
   const reviews = await res.json();
@@ -84,6 +104,7 @@ async function deleteReview(id) {
   loadReviews();
 }
 
+// ─── レビュー投稿フォーム ─────────────────────────────────────────────────────
 document.getElementById('review-form').addEventListener('submit', async e => {
   e.preventDefault();
   const date       = document.getElementById('rv-date').value;
@@ -91,6 +112,9 @@ document.getElementById('review-form').addEventListener('submit', async e => {
   const impression = document.getElementById('rv-impression').value.trim();
   const rating     = document.getElementById('rv-rating').value;
   if (!date || !order || !impression) return;
+
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.textContent = '保存中…'; btn.disabled = true;
 
   await fetch('/foodlog/api/reviews.php', {
     method: 'POST',
@@ -102,8 +126,110 @@ document.getElementById('review-form').addEventListener('submit', async e => {
   document.getElementById('rv-impression').value = '';
   document.getElementById('rv-rating').value = '';
   document.getElementById('rv-date').value = today;
+  btn.textContent = 'Save Review'; btn.disabled = false;
+
   loadReviews();
+  if (window.innerWidth < 700) document.getElementById('reviews-list').scrollIntoView({ behavior: 'smooth' });
 });
 
-loadRestaurant();
-loadReviews();
+// ─── 画像アップロードエリア共通処理 ──────────────────────────────────────────
+function setupUploadArea(areaId, placeholderId, previewId, inputId) {
+  const area        = document.getElementById(areaId);
+  const placeholder = document.getElementById(placeholderId);
+  const preview     = document.getElementById(previewId);
+  const input       = document.getElementById(inputId);
+
+  area.addEventListener('click', () => input.click());
+  area.addEventListener('dragover', e => { e.preventDefault(); area.style.borderColor = 'var(--accent)'; });
+  area.addEventListener('dragleave', () => { area.style.borderColor = ''; });
+  area.addEventListener('drop', e => {
+    e.preventDefault(); area.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file) showImagePreview(file, placeholder, preview);
+    const dt = new DataTransfer(); dt.items.add(file);
+    input.files = dt.files;
+  });
+  input.addEventListener('change', () => {
+    if (input.files[0]) showImagePreview(input.files[0], placeholder, preview);
+  });
+}
+
+function showImagePreview(file, placeholder, preview) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── 編集モーダル ─────────────────────────────────────────────────────────────
+const editModal = document.getElementById('edit-modal');
+
+document.getElementById('edit-info-btn').addEventListener('click', () => {
+  if (!currentRestaurant) return;
+
+  // 現在の値をフォームにセット
+  document.getElementById('edit-name').value     = currentRestaurant.name || '';
+  document.getElementById('edit-category').value = currentRestaurant.category || '';
+  document.getElementById('edit-desc').value     = currentRestaurant.description || '';
+
+  // 現在の画像をプレビューに表示
+  const preview     = document.getElementById('edit-image-preview');
+  const placeholder = document.getElementById('edit-upload-placeholder');
+  if (currentRestaurant.image) {
+    preview.src = `/foodlog/${currentRestaurant.image}`;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+  } else {
+    preview.style.display = 'none';
+    placeholder.style.display = 'flex';
+  }
+
+  editModal.classList.add('open');
+  document.getElementById('edit-name').focus();
+});
+
+document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
+editModal.addEventListener('click', e => { if (e.target === editModal) closeEditModal(); });
+
+function closeEditModal() {
+  editModal.classList.remove('open');
+  document.getElementById('edit-restaurant-form').reset();
+  document.getElementById('edit-image-preview').style.display = 'none';
+  document.getElementById('edit-upload-placeholder').style.display = 'flex';
+}
+
+document.getElementById('edit-restaurant-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.textContent = '保存中…'; btn.disabled = true;
+
+  const formData = new FormData(e.target);
+  const res = await fetch(`/foodlog/api/restaurants.php?id=${restaurantId}`, {
+    method: 'POST',
+    body: formData,
+  });
+  const updated = await res.json();
+
+  if (updated && updated.id) {
+    currentRestaurant = updated;
+    // restaurantListも更新
+    const idx = restaurantList.findIndex(r => String(r.id) === String(restaurantId));
+    if (idx !== -1) restaurantList[idx] = updated;
+    renderRestaurantInfo(updated);
+  }
+
+  btn.textContent = 'Save Changes'; btn.disabled = false;
+  closeEditModal();
+});
+
+// ─── 初期化 ──────────────────────────────────────────────────────────────────
+function init() {
+  setupUploadArea('edit-upload-area', 'edit-upload-placeholder', 'edit-image-preview', 'edit-image');
+  loadRestaurant();
+  loadReviews();
+}
+
+init();
