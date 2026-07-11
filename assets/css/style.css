@@ -386,9 +386,9 @@ footer {
 
 /* ORDER TEXTAREA */
 .order-textarea {
-  resize: vertical;
-  min-height: 76px;
-  max-height: 160px;
+  resize: none;
+  height: 80px;
+  overflow-y: auto;
 }
 
 /* IMPRESSION TEXTAREA */
