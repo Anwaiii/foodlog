@@ -17,6 +17,11 @@ document.getElementById('rv-date').value = today;
 let currentRestaurant = null;
 let restaurantList = [];
 
+// ページネーション用
+const REVIEWS_PER_PAGE = 5;
+let allReviews = [];
+let currentPage = 1;
+
 // ─── レストラン情報の読み込み ─────────────────────────────────────────────────
 async function loadRestaurant() {
   const res = await fetch('/foodlog/api/restaurants.php');
@@ -62,21 +67,27 @@ function showPlaceholder(idx) {
 // ─── レビューの読み込み・描画 ─────────────────────────────────────────────────
 async function loadReviews() {
   const res = await fetch(`/foodlog/api/reviews.php?restaurant_id=${restaurantId}`);
-  const reviews = await res.json();
-  renderReviews(reviews);
+  allReviews = await res.json();
+  currentPage = 1;
+  renderReviews();
 }
 
-function renderReviews(reviews) {
+function renderReviews() {
   const list = document.getElementById('reviews-list');
-  document.getElementById('review-count-badge').textContent = reviews.length + ' Reviews';
+  const total = allReviews.length;
+  const totalPages = Math.max(1, Math.ceil(total / REVIEWS_PER_PAGE));
+  const start = (currentPage - 1) * REVIEWS_PER_PAGE;
+  const pageReviews = allReviews.slice(start, start + REVIEWS_PER_PAGE);
 
-  if (!reviews.length) {
+  document.getElementById('review-count-badge').textContent = total + ' Reviews';
+
+  if (!total) {
     list.innerHTML = `<div class="reviews-empty"><div class="empty-icon">📋</div><p>No orders logged yet.<br/>Use the form to add your first review!</p></div>`;
     return;
   }
 
   list.innerHTML = '';
-  reviews.forEach(rv => {
+  pageReviews.forEach(rv => {
     const stars = rv.rating ? '⭐'.repeat(Number(rv.rating)) : '';
     const formatted = new Date(rv.date + 'T00:00:00').toLocaleDateString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric'
@@ -108,6 +119,19 @@ function renderReviews(reviews) {
   list.querySelectorAll('.review-edit').forEach(btn => {
     btn.addEventListener('click', () => openEditReviewModal(btn.dataset));
   });
+
+  // ページネーションUI
+  if (totalPages > 1) {
+    const nav = document.createElement('div');
+    nav.className = 'pagination';
+    nav.innerHTML = `
+      <button class="pagination-btn" id="pg-prev" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>
+      <span class="pagination-info">${currentPage} / ${totalPages}</span>
+      <button class="pagination-btn" id="pg-next" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
+    list.appendChild(nav);
+    document.getElementById('pg-prev').addEventListener('click', () => { currentPage--; renderReviews(); });
+    document.getElementById('pg-next').addEventListener('click', () => { currentPage++; renderReviews(); });
+  }
 }
 
 async function deleteReview(id) {
@@ -175,7 +199,17 @@ function showImagePreview(file, placeholder, preview) {
   reader.readAsDataURL(file);
 }
 
-// ─── 編集モーダル ─────────────────────────────────────────────────────────────
+// ─── レストラン削除（詳細ページ）────────────────────────────────────────────
+document.getElementById('delete-restaurant-btn').addEventListener('click', async () => {
+  const name = currentRestaurant ? currentRestaurant.name : 'このレストラン';
+  if (!confirm(`「${name}」を削除しますか？\nすべてのレビューも削除されます。`)) return;
+  const btn = document.getElementById('delete-restaurant-btn');
+  btn.textContent = '削除中…'; btn.disabled = true;
+  await fetch(`/foodlog/api/restaurants.php?id=${restaurantId}`, { method: 'DELETE' });
+  window.location.href = '/foodlog/';
+});
+
+// ─── 編集モーダル（レストラン）────────────────────────────────────────────────
 const editModal = document.getElementById('edit-modal');
 
 document.getElementById('edit-info-btn').addEventListener('click', () => {

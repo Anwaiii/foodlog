@@ -16,16 +16,17 @@ class RestaurantController {
     public function handleRequest(): void {
         header('Content-Type: application/json');
         header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+        header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type');
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
         $id = isset($_GET['id']) ? intval($_GET['id']) : null;
 
         match ($_SERVER['REQUEST_METHOD']) {
-            'GET'  => $this->index(),
-            'POST' => $id ? $this->update($id) : $this->store(),
-            default => $this->methodNotAllowed(),
+            'GET'    => $this->index(),
+            'POST'   => $id ? $this->update($id) : $this->store(),
+            'DELETE' => $id ? $this->destroy($id) : $this->methodNotAllowed(),
+            default  => $this->methodNotAllowed(),
         };
     }
 
@@ -94,6 +95,16 @@ class RestaurantController {
             return $this->uploadPath . $filename;
         }
         return null;
+    }
+
+    private function destroy(int $id): void {
+        $deleted = $this->model->delete($id);
+        if (!$deleted) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Restaurant not found']);
+            return;
+        }
+        echo json_encode(['deleted' => $id]);
     }
 
     private function methodNotAllowed(): void {

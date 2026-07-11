@@ -55,4 +55,10 @@ class Restaurant {
         }
         return $this->getById($id);
     }
+
+    public function delete(int $id): bool {
+        $stmt = $this->db->prepare("DELETE FROM restaurants WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->rowCount() > 0;
+    }
 }

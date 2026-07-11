@@ -32,6 +32,7 @@ function renderGrid(restaurants) {
          <div class="card-image-placeholder" style="display:none;background:${gradient}">🍽️</div>`
       : `<div class="card-image-placeholder" style="background:${gradient}">🍽️</div>`;
     card.innerHTML = `${imageHtml}
+      <button class="card-delete-btn" data-id="${r.id}" data-name="${r.name.replace(/"/g,'&quot;')}" title="Delete">🗑</button>
       <div class="card-body">
         <div class="card-category">${r.category || ''}</div>
         <div class="card-name">${r.name}</div>
@@ -43,6 +44,20 @@ function renderGrid(restaurants) {
       </div>`;
     grid.appendChild(card);
   });
+
+  // 削除ボタン（カードクリックを伝播させない）
+  grid.querySelectorAll('.card-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const name = btn.dataset.name;
+      if (!confirm(`「${name}」を削除しますか？\nすべてのレビューも削除されます。`)) return;
+      btn.textContent = '…'; btn.disabled = true;
+      await fetch(`/foodlog/api/restaurants.php?id=${btn.dataset.id}`, { method: 'DELETE' });
+      init();
+    });
+  });
+
   document.getElementById('stat-restaurants').textContent = restaurants.length;
   document.getElementById('stat-reviews').textContent = totalReviews;
   document.getElementById('total-reviews-badge').textContent = totalReviews + ' Reviews';

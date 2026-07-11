@@ -27,7 +27,10 @@
       <div class="detail-category" id="detail-category"></div>
       <h1 class="detail-name" id="detail-name">Loading…</h1>
       <p class="detail-desc" id="detail-desc"></p>
-      <button class="edit-info-btn" id="edit-info-btn">✏️ Edit Info</button>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1rem;">
+        <button class="edit-info-btn" id="edit-info-btn">✏️ Edit Info</button>
+        <button class="edit-info-btn delete-restaurant-btn" id="delete-restaurant-btn">🗑 Delete</button>
+      </div>
     </div>
   </div>
 
