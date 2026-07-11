@@ -317,6 +317,20 @@ document.getElementById('edit-review-form').addEventListener('submit', async e =
 // ─── 初期化 ──────────────────────────────────────────────────────────────────
 function init() {
   setupUploadArea('edit-upload-area', 'edit-upload-placeholder', 'edit-image-preview', 'edit-image');
+
+  // 感想欄の文字数カウンター
+  const impression = document.getElementById('rv-impression');
+  const counter    = document.getElementById('impression-count');
+  if (impression && counter) {
+    const update = () => {
+      const len = impression.value.length;
+      counter.textContent = `${len} / 500`;
+      counter.className = 'char-count' +
+        (len >= 500 ? ' at-limit' : len >= 400 ? ' near-limit' : '');
+    };
+    impression.addEventListener('input', update);
+  }
+
   loadRestaurant();
   loadReviews();
 }

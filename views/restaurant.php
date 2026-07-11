@@ -45,11 +45,17 @@
           </div>
           <div class="form-group">
             <label for="rv-order">What did you order? *</label>
-            <input type="text" id="rv-order" placeholder="e.g. Tonkotsu Ramen + Gyoza" required />
+            <textarea id="rv-order" class="order-textarea" rows="3"
+              placeholder="e.g. Tonkotsu Ramen&#10;Gyoza&#10;Karaage" required></textarea>
           </div>
           <div class="form-group">
-            <label for="rv-impression">Your Impression *</label>
-            <textarea id="rv-impression" rows="5" placeholder="How was it? Taste, delivery time, value…" required></textarea>
+            <label for="rv-impression">
+              Your Impression *
+              <span class="char-count" id="impression-count">0 / 500</span>
+            </label>
+            <textarea id="rv-impression" class="impression-textarea"
+              placeholder="How was it? Taste, delivery time, value…"
+              maxlength="500" required></textarea>
           </div>
           <div class="form-group">
             <label for="rv-rating">Rating (1–5 ⭐)</label>

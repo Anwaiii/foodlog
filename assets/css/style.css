@@ -384,3 +384,28 @@ footer {
 .pagination-btn:disabled { opacity: 0.35; cursor: default; }
 .pagination-info { font-size: 0.82rem; color: var(--muted); padding: 0 0.5rem; }
 
+/* ORDER TEXTAREA */
+.order-textarea {
+  resize: vertical;
+  min-height: 76px;
+  max-height: 160px;
+}
+
+/* IMPRESSION TEXTAREA */
+.impression-textarea {
+  resize: none;
+  height: 160px;
+  overflow-y: auto;
+}
+
+/* CHAR COUNT */
+.char-count {
+  float: right;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+.char-count.near-limit { color: #f59e0b; }
+.char-count.at-limit   { color: #ef4444; font-weight: 600; }
+
+
