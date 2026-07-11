@@ -86,7 +86,15 @@ function renderReviews(reviews) {
     item.innerHTML = `
       <div class="review-item-header">
         <div class="review-date">📅 ${formatted}</div>
-        <button class="review-delete" data-id="${rv.id}" title="Delete">🗑</button>
+        <div style="display:flex;gap:6px;">
+          <button class="review-edit" data-id="${rv.id}"
+            data-date="${rv.date}"
+            data-order="${rv.order_details.replace(/"/g,'&quot;')}"
+            data-impression="${rv.impression.replace(/"/g,'&quot;')}"
+            data-rating="${rv.rating || ''}"
+            title="Edit">✏️</button>
+          <button class="review-delete" data-id="${rv.id}" title="Delete">🗑</button>
+        </div>
       </div>
       ${stars ? `<div style="font-size:0.9rem;margin-bottom:0.5rem;">${stars}</div>` : ''}
       <div class="review-order">🛒 <span>${rv.order_details}</span></div>
@@ -96,6 +104,9 @@ function renderReviews(reviews) {
 
   list.querySelectorAll('.review-delete').forEach(btn => {
     btn.addEventListener('click', () => deleteReview(btn.dataset.id));
+  });
+  list.querySelectorAll('.review-edit').forEach(btn => {
+    btn.addEventListener('click', () => openEditReviewModal(btn.dataset));
   });
 }
 
@@ -223,6 +234,50 @@ document.getElementById('edit-restaurant-form').addEventListener('submit', async
 
   btn.textContent = 'Save Changes'; btn.disabled = false;
   closeEditModal();
+});
+
+// ─── レビュー編集モーダル ─────────────────────────────────────────────────────
+const editReviewModal = document.getElementById('edit-review-modal');
+
+function openEditReviewModal(data) {
+  document.getElementById('edit-review-id').value         = data.id;
+  document.getElementById('edit-rv-date').value           = data.date;
+  document.getElementById('edit-rv-order').value          = data.order;
+  document.getElementById('edit-rv-impression').value     = data.impression;
+  document.getElementById('edit-rv-rating').value         = data.rating || '';
+  editReviewModal.classList.add('open');
+  document.getElementById('edit-rv-order').focus();
+}
+
+function closeEditReviewModal() {
+  editReviewModal.classList.remove('open');
+  document.getElementById('edit-review-form').reset();
+}
+
+document.getElementById('cancel-edit-review-btn').addEventListener('click', closeEditReviewModal);
+editReviewModal.addEventListener('click', e => { if (e.target === editReviewModal) closeEditReviewModal(); });
+
+document.getElementById('edit-review-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id         = document.getElementById('edit-review-id').value;
+  const date       = document.getElementById('edit-rv-date').value;
+  const order      = document.getElementById('edit-rv-order').value.trim();
+  const impression = document.getElementById('edit-rv-impression').value.trim();
+  const rating     = document.getElementById('edit-rv-rating').value;
+  if (!date || !order || !impression) return;
+
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.textContent = '保存中…'; btn.disabled = true;
+
+  await fetch(`/foodlog/api/reviews.php?id=${id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date, order_details: order, impression, rating }),
+  });
+
+  btn.textContent = 'Save Changes'; btn.disabled = false;
+  closeEditReviewModal();
+  loadReviews();
 });
 
 // ─── 初期化 ──────────────────────────────────────────────────────────────────

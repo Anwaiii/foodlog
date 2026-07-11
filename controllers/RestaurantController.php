@@ -83,6 +83,12 @@ class RestaurantController {
         $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         if (!in_array($ext, $allowed)) return null;
 
+        // MIMEタイプをファイルの実体から検証（拡張子偽装対策）
+        $finfo    = new finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file['tmp_name']);
+        $allowedMime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!in_array($mimeType, $allowedMime)) return null;
+
         $filename = 'restaurant_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
         if (move_uploaded_file($file['tmp_name'], $this->uploadDir . $filename)) {
             return $this->uploadPath . $filename;

@@ -103,6 +103,36 @@
     </div>
   </div>
 
+  <!-- Edit Review Modal -->
+  <div class="modal-overlay" id="edit-review-modal">
+    <div class="modal">
+      <h2>✏️ Edit Review</h2>
+      <form id="edit-review-form">
+        <input type="hidden" id="edit-review-id" />
+        <div class="form-group">
+          <label for="edit-rv-date">Date *</label>
+          <input type="date" id="edit-rv-date" required />
+        </div>
+        <div class="form-group">
+          <label for="edit-rv-order">What did you order? *</label>
+          <input type="text" id="edit-rv-order" placeholder="e.g. Tonkotsu Ramen + Gyoza" required />
+        </div>
+        <div class="form-group">
+          <label for="edit-rv-impression">Your Impression *</label>
+          <textarea id="edit-rv-impression" rows="4" placeholder="How was it?" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="edit-rv-rating">Rating (1–5 ⭐)</label>
+          <input type="number" id="edit-rv-rating" min="1" max="5" placeholder="5" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancel-edit-review-btn">Cancel</button>
+          <button type="submit" class="btn-submit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/foodlog/assets/js/restaurant.js"></script>
 </body>
 </html>

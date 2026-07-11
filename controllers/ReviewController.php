@@ -16,9 +16,11 @@ class ReviewController {
         header('Access-Control-Allow-Headers: Content-Type');
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
+        $id = isset($_GET['id']) ? intval($_GET['id']) : null;
+
         match ($_SERVER['REQUEST_METHOD']) {
             'GET'    => $this->index(),
-            'POST'   => $this->store(),
+            'POST'   => $id ? $this->update($id) : $this->store(),
             'DELETE' => $this->destroy(),
             default  => $this->methodNotAllowed(),
         };
@@ -35,12 +37,12 @@ class ReviewController {
     }
 
     private function store(): void {
-        $data          = json_decode(file_get_contents('php://input'), true);
-        $restaurantId  = intval($data['restaurant_id'] ?? 0);
-        $date          = $data['date'] ?? '';
-        $orderDetails  = trim($data['order_details'] ?? '');
-        $impression    = trim($data['impression'] ?? '');
-        $rating        = isset($data['rating']) && $data['rating'] !== '' ? intval($data['rating']) : null;
+        $data         = json_decode(file_get_contents('php://input'), true);
+        $restaurantId = intval($data['restaurant_id'] ?? 0);
+        $date         = $data['date'] ?? '';
+        $orderDetails = trim($data['order_details'] ?? '');
+        $impression   = trim($data['impression'] ?? '');
+        $rating       = isset($data['rating']) && $data['rating'] !== '' ? intval($data['rating']) : null;
 
         if (!$restaurantId || !$date || !$orderDetails || !$impression) {
             http_response_code(400);
@@ -49,6 +51,28 @@ class ReviewController {
         }
 
         echo json_encode($this->model->create($restaurantId, $date, $orderDetails, $impression, $rating));
+    }
+
+    private function update(int $id): void {
+        $data         = json_decode(file_get_contents('php://input'), true);
+        $date         = $data['date'] ?? '';
+        $orderDetails = trim($data['order_details'] ?? '');
+        $impression   = trim($data['impression'] ?? '');
+        $rating       = isset($data['rating']) && $data['rating'] !== '' ? intval($data['rating']) : null;
+
+        if (!$date || !$orderDetails || !$impression) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing required fields']);
+            return;
+        }
+
+        $result = $this->model->update($id, $date, $orderDetails, $impression, $rating);
+        if (!$result) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Review not found']);
+            return;
+        }
+        echo json_encode($result);
     }
 
     private function destroy(): void {

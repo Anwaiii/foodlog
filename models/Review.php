@@ -32,6 +32,18 @@ class Review {
         ];
     }
 
+    public function update(int $id, string $date, string $orderDetails, string $impression, ?int $rating): ?array {
+        $stmt = $this->db->prepare(
+            "UPDATE reviews SET date=?, order_details=?, impression=?, rating=? WHERE id=?"
+        );
+        $stmt->execute([$date, $orderDetails, $impression, $rating, $id]);
+        if ($stmt->rowCount() === 0) return null;
+
+        $stmt2 = $this->db->prepare("SELECT * FROM reviews WHERE id = ?");
+        $stmt2->execute([$id]);
+        return $stmt2->fetch() ?: null;
+    }
+
     public function delete(int $id): bool {
         $stmt = $this->db->prepare("DELETE FROM reviews WHERE id = ?");
         $stmt->execute([$id]);
