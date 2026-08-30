@@ -67,8 +67,10 @@ function renderGrid(restaurants) {
   const dates = restaurants.map(r => r.latest_date).filter(Boolean).sort().reverse();
   if (dates.length) {
     const d = new Date(dates[0] + 'T00:00:00');
-    document.getElementById('stat-latest').textContent =
-      d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    document.getElementById('stat-latest').textContent = `${y}/${m}/${day}`;
   } else {
     document.getElementById('stat-latest').textContent = '—';
   }
