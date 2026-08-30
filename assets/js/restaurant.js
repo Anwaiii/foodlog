@@ -314,22 +314,49 @@ document.getElementById('edit-review-form').addEventListener('submit', async e =
   loadReviews();
 });
 
+// ─── 文字数カウンター汎用 ─────────────────────────────────────────────────────
+function setupCharCounter(inputId, counterId) {
+  const input = document.getElementById(inputId);
+  const counter = document.getElementById(counterId);
+  if (!input || !counter) return;
+  const max = parseInt(input.getAttribute('maxlength')) || 999;
+  const update = () => {
+    const len = input.value.length;
+    counter.textContent = `${len} / ${max}`;
+    const ratio = len / max;
+    counter.className = 'char-count' +
+      (ratio >= 1 ? ' at-limit' : ratio >= 0.8 ? ' near-limit' : '');
+  };
+  input.addEventListener('input', update);
+  update(); // 初期表示
+}
+
+// ─── 未来日を選べないようにする ──────────────────────────────────────────────
+function setupDateMax(inputId) {
+  const input = document.getElementById(inputId);
+  if (input) input.setAttribute('max', today);
+}
+
 // ─── 初期化 ──────────────────────────────────────────────────────────────────
 function init() {
   setupUploadArea('edit-upload-area', 'edit-upload-placeholder', 'edit-image-preview', 'edit-image');
 
-  // 感想欄の文字数カウンター
-  const impression = document.getElementById('rv-impression');
-  const counter    = document.getElementById('impression-count');
-  if (impression && counter) {
-    const update = () => {
-      const len = impression.value.length;
-      counter.textContent = `${len} / 500`;
-      counter.className = 'char-count' +
-        (len >= 500 ? ' at-limit' : len >= 400 ? ' near-limit' : '');
-    };
-    impression.addEventListener('input', update);
-  }
+  // 未来日禁止
+  setupDateMax('rv-date');
+  setupDateMax('edit-rv-date');
+
+  // Log an Order フォーム
+  setupCharCounter('rv-order', 'order-count');
+  setupCharCounter('rv-impression', 'impression-count');
+
+  // Edit Restaurant Info モーダル
+  setupCharCounter('edit-name', 'edit-name-count');
+  setupCharCounter('edit-category', 'edit-category-count');
+  setupCharCounter('edit-desc', 'edit-desc-count');
+
+  // Edit Review モーダル
+  setupCharCounter('edit-rv-order', 'edit-order-count');
+  setupCharCounter('edit-rv-impression', 'edit-impression-count');
 
   loadRestaurant();
   loadReviews();

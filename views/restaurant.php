@@ -40,17 +40,20 @@
         <h2>📝 Log an Order</h2>
         <form id="review-form">
           <div class="form-group">
-            <label for="rv-date">Date *</label>
+            <label for="rv-date">Date</label>
             <input type="date" id="rv-date" required />
           </div>
           <div class="form-group">
-            <label for="rv-order">What did you order? *</label>
+            <label for="rv-order">
+              What did you order?
+              <span class="char-count" id="order-count">0 / 200</span>
+            </label>
             <textarea id="rv-order" class="order-textarea" rows="3"
-              placeholder="e.g. Tonkotsu Ramen&#10;Gyoza&#10;Karaage" required></textarea>
+              placeholder="e.g. Tonkotsu Ramen&#10;Gyoza&#10;Karaage" maxlength="200" required></textarea>
           </div>
           <div class="form-group">
             <label for="rv-impression">
-              Your Impression *
+              Your Impression
               <span class="char-count" id="impression-count">0 / 500</span>
             </label>
             <textarea id="rv-impression" class="impression-textarea"
@@ -82,16 +85,25 @@
       <h2>✏️ Edit Restaurant Info</h2>
       <form id="edit-restaurant-form" enctype="multipart/form-data">
         <div class="form-group">
-          <label for="edit-name">Restaurant Name *</label>
-          <input type="text" id="edit-name" name="name" required />
+          <label for="edit-name">
+            Restaurant Name
+            <span class="char-count" id="edit-name-count">0 / 50</span>
+          </label>
+          <input type="text" id="edit-name" name="name" maxlength="50" required />
         </div>
         <div class="form-group">
-          <label for="edit-category">Category *</label>
-          <input type="text" id="edit-category" name="category" required />
+          <label for="edit-category">
+            Category
+            <span class="char-count" id="edit-category-count">0 / 200</span>
+          </label>
+          <input type="text" id="edit-category" name="category" maxlength="200" required />
         </div>
         <div class="form-group">
-          <label for="edit-desc">Description</label>
-          <input type="text" id="edit-desc" name="description" />
+          <label for="edit-desc">
+            Description
+            <span class="char-count" id="edit-desc-count">0 / 200</span>
+          </label>
+          <textarea id="edit-desc" name="description" class="impression-textarea" maxlength="200"></textarea>
         </div>
         <div class="form-group">
           <label>Photo <span style="color:var(--muted);font-weight:400;">(leave empty to keep current)</span></label>
@@ -119,16 +131,22 @@
       <form id="edit-review-form">
         <input type="hidden" id="edit-review-id" />
         <div class="form-group">
-          <label for="edit-rv-date">Date *</label>
+          <label for="edit-rv-date">Date</label>
           <input type="date" id="edit-rv-date" required />
         </div>
         <div class="form-group">
-          <label for="edit-rv-order">What did you order? *</label>
-          <input type="text" id="edit-rv-order" placeholder="e.g. Tonkotsu Ramen + Gyoza" required />
+          <label for="edit-rv-order">
+            What did you order?
+            <span class="char-count" id="edit-order-count">0 / 200</span>
+          </label>
+          <textarea id="edit-rv-order" class="order-textarea" rows="3" placeholder="e.g. Tonkotsu Ramen&#10;Gyoza" maxlength="200" required></textarea>
         </div>
         <div class="form-group">
-          <label for="edit-rv-impression">Your Impression *</label>
-          <textarea id="edit-rv-impression" rows="4" placeholder="How was it?" required></textarea>
+          <label for="edit-rv-impression">
+            Your Impression
+            <span class="char-count" id="edit-impression-count">0 / 500</span>
+          </label>
+          <textarea id="edit-rv-impression" class="impression-textarea" placeholder="How was it?" maxlength="500" required></textarea>
         </div>
         <div class="form-group">
           <label for="edit-rv-rating">Rating (1–5 ⭐)</label>

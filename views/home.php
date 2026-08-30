@@ -57,16 +57,25 @@
       <h2>Add New Restaurant</h2>
       <form id="add-restaurant-form" enctype="multipart/form-data">
         <div class="form-group">
-          <label for="r-name">Restaurant Name *</label>
-          <input type="text" id="r-name" name="name" placeholder="e.g. Spicy Ramen Hub" required />
+          <label for="r-name">
+            Restaurant Name
+            <span class="char-count" id="r-name-count">0 / 50</span>
+          </label>
+          <input type="text" id="r-name" name="name" placeholder="e.g. Spicy Ramen Hub" maxlength="50" required />
         </div>
         <div class="form-group">
-          <label for="r-category">Category *</label>
-          <input type="text" id="r-category" name="category" placeholder="e.g. Japanese, Burgers…" required />
+          <label for="r-category">
+            Category
+            <span class="char-count" id="r-category-count">0 / 200</span>
+          </label>
+          <input type="text" id="r-category" name="category" placeholder="e.g. Japanese, Burgers…" maxlength="200" required />
         </div>
         <div class="form-group">
-          <label for="r-desc">Short Description</label>
-          <input type="text" id="r-desc" name="description" placeholder="e.g. Authentic tonkotsu ramen" />
+          <label for="r-desc">
+            Short Description
+            <span class="char-count" id="r-desc-count">0 / 200</span>
+          </label>
+          <textarea id="r-desc" name="description" class="impression-textarea" placeholder="e.g. Authentic tonkotsu ramen" maxlength="200"></textarea>
         </div>
         <div class="form-group">
           <label for="r-image">Photo</label>

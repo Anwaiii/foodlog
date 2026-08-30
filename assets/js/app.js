@@ -133,8 +133,31 @@ document.getElementById('add-restaurant-form').addEventListener('submit', async 
   init();
 });
 
+// ─── 文字数カウンター汎用 ─────────────────────────────────────────────────────
+function setupCharCounter(inputId, counterId) {
+  const input = document.getElementById(inputId);
+  const counter = document.getElementById(counterId);
+  if (!input || !counter) return;
+  const max = parseInt(input.getAttribute('maxlength')) || 999;
+  const update = () => {
+    const len = input.value.length;
+    counter.textContent = `${len} / ${max}`;
+    const ratio = len / max;
+    counter.className = 'char-count' +
+      (ratio >= 1 ? ' at-limit' : ratio >= 0.8 ? ' near-limit' : '');
+  };
+  input.addEventListener('input', update);
+  update();
+}
+
 async function init() {
   setupUploadArea('add-upload-area', 'add-upload-placeholder', 'add-image-preview', 'r-image');
+
+  // Add Restaurant モーダルの文字数カウンター
+  setupCharCounter('r-name', 'r-name-count');
+  setupCharCounter('r-category', 'r-category-count');
+  setupCharCounter('r-desc', 'r-desc-count');
+
   const restaurants = await loadRestaurants();
   renderGrid(restaurants);
 }
