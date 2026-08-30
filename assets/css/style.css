@@ -182,7 +182,7 @@ body {
   padding: 0.75rem 1rem; color: var(--text);
   font-family: 'Inter', sans-serif; font-size: 0.9rem;
   transition: border-color 0.2s;
-  resize: vertical;
+  resize: none;
 }
 .form-group input:focus, .form-group textarea:focus {
   outline: none; border-color: var(--accent);
