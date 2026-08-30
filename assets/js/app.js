@@ -37,6 +37,7 @@ function renderGrid(restaurants) {
         <div class="card-category">${r.category || ''}</div>
         <div class="card-name">${r.name}</div>
         <div class="card-desc">${r.description || ''}</div>
+        ${r.address ? `<div class="card-address" style="font-size:0.85rem;color:var(--muted);margin-top:0.4rem;">📍 ${r.address}</div>` : ''}
         <div class="card-footer">
           <div class="review-count"><strong>${count}</strong> ${count === 1 ? 'review' : 'reviews'}</div>
           <div class="card-arrow">→</div>
@@ -157,6 +158,7 @@ async function init() {
   setupCharCounter('r-name', 'r-name-count');
   setupCharCounter('r-category', 'r-category-count');
   setupCharCounter('r-desc', 'r-desc-count');
+  setupCharCounter('r-address', 'r-address-count');
 
   const restaurants = await loadRestaurants();
   renderGrid(restaurants);
