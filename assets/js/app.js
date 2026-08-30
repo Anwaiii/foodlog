@@ -62,6 +62,16 @@ function renderGrid(restaurants) {
   document.getElementById('stat-reviews').textContent = totalReviews;
   document.getElementById('total-reviews-badge').textContent = totalReviews + ' Reviews';
   document.getElementById('restaurant-count').textContent = '(' + restaurants.length + ')';
+
+  // 最新注文日を表示
+  const dates = restaurants.map(r => r.latest_date).filter(Boolean).sort().reverse();
+  if (dates.length) {
+    const d = new Date(dates[0] + 'T00:00:00');
+    document.getElementById('stat-latest').textContent =
+      d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } else {
+    document.getElementById('stat-latest').textContent = '—';
+  }
 }
 
 // ─── Upload area setup ────────────────────────────────────────────────────────

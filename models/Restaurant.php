@@ -10,7 +10,7 @@ class Restaurant {
 
     public function getAll(): array {
         $stmt = $this->db->query("
-            SELECT r.*, COUNT(rv.id) AS review_count
+            SELECT r.*, COUNT(rv.id) AS review_count, MAX(rv.date) AS latest_date
             FROM restaurants r
             LEFT JOIN reviews rv ON r.id = rv.restaurant_id
             GROUP BY r.id
