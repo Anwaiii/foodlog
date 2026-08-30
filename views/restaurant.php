@@ -27,6 +27,7 @@
       <div class="detail-category" id="detail-category"></div>
       <h1 class="detail-name" id="detail-name">Loading…</h1>
       <p class="detail-desc" id="detail-desc"></p>
+      <p class="detail-address" id="detail-address" style="font-size:0.9rem;color:var(--muted);margin-top:0.5rem;"></p>
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1rem;">
         <button class="edit-info-btn" id="edit-info-btn">✏️ Edit Info</button>
         <button class="edit-info-btn delete-restaurant-btn" id="delete-restaurant-btn">🗑 Delete</button>
@@ -38,7 +39,7 @@
     <div class="detail-grid">
       <aside class="review-form-card">
         <h2>📝 Log an Order</h2>
-        <form id="review-form">
+        <form id="review-form" enctype="multipart/form-data">
           <div class="form-group">
             <label for="rv-date">Date</label>
             <input type="date" id="rv-date" required />
@@ -62,7 +63,18 @@
           </div>
           <div class="form-group">
             <label for="rv-rating">Rating (1–5 ⭐)</label>
-            <input type="number" id="rv-rating" min="1" max="5" placeholder="5" required />
+            <input type="number" id="rv-rating" name="rating" min="1" max="5" placeholder="5" required />
+          </div>
+          <div class="form-group">
+            <label>Photo (optional, max 1)</label>
+            <div class="upload-area" id="rv-upload-area">
+              <div class="upload-placeholder" id="rv-upload-placeholder">
+                <span class="upload-icon">📷</span>
+                <span>Click or drag to upload photo</span>
+              </div>
+              <img id="rv-image-preview" class="upload-preview" style="display:none;" alt="Preview" />
+              <input type="file" id="rv-image" name="image" accept="image/*" style="display:none;" />
+            </div>
           </div>
           <button type="submit" class="btn-submit" style="width:100%;padding:0.85rem;">Save Review</button>
         </form>
@@ -106,6 +118,13 @@
           <textarea id="edit-desc" name="description" class="impression-textarea" maxlength="200"></textarea>
         </div>
         <div class="form-group">
+          <label for="edit-address">
+            Address
+            <span class="char-count" id="edit-address-count">0 / 100</span>
+          </label>
+          <input type="text" id="edit-address" name="address" maxlength="100" />
+        </div>
+        <div class="form-group">
           <label>Photo <span style="color:var(--muted);font-weight:400;">(leave empty to keep current)</span></label>
           <div class="upload-area" id="edit-upload-area">
             <div class="upload-placeholder" id="edit-upload-placeholder">
@@ -128,7 +147,7 @@
   <div class="modal-overlay" id="edit-review-modal">
     <div class="modal">
       <h2>✏️ Edit Review</h2>
-      <form id="edit-review-form">
+      <form id="edit-review-form" enctype="multipart/form-data">
         <input type="hidden" id="edit-review-id" />
         <div class="form-group">
           <label for="edit-rv-date">Date</label>
@@ -150,7 +169,18 @@
         </div>
         <div class="form-group">
           <label for="edit-rv-rating">Rating (1–5 ⭐)</label>
-          <input type="number" id="edit-rv-rating" min="1" max="5" placeholder="5" required />
+          <input type="number" id="edit-rv-rating" name="rating" min="1" max="5" placeholder="5" required />
+        </div>
+        <div class="form-group">
+          <label>Photo (optional, max 1)</label>
+          <div class="upload-area" id="edit-rv-upload-area">
+            <div class="upload-placeholder" id="edit-rv-upload-placeholder">
+              <span class="upload-icon">📷</span>
+              <span>Click or drag to change photo</span>
+            </div>
+            <img id="edit-rv-image-preview" class="upload-preview" style="display:none;" alt="Preview" />
+            <input type="file" id="edit-rv-image" name="image" accept="image/*" style="display:none;" />
+          </div>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-cancel" id="cancel-edit-review-btn">Cancel</button>

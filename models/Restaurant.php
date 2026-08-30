@@ -32,26 +32,26 @@ class Restaurant {
         return $result ?: null;
     }
 
-    public function create(string $name, string $category, string $description, ?string $image): array {
+    public function create(string $name, string $category, string $description, string $address, ?string $image): array {
         $stmt = $this->db->prepare(
-            "INSERT INTO restaurants (name, category, description, image) VALUES (?, ?, ?, ?)"
+            "INSERT INTO restaurants (name, category, description, address, image) VALUES (?, ?, ?, ?, ?)"
         );
-        $stmt->execute([$name, $category, $description, $image]);
+        $stmt->execute([$name, $category, $description, $address, $image]);
         $id = $this->db->lastInsertId();
         return $this->getById($id);
     }
 
-    public function update(int $id, string $name, string $category, string $description, ?string $image): ?array {
+    public function update(int $id, string $name, string $category, string $description, string $address, ?string $image): ?array {
         if ($image !== null) {
             $stmt = $this->db->prepare(
-                "UPDATE restaurants SET name=?, category=?, description=?, image=? WHERE id=?"
+                "UPDATE restaurants SET name=?, category=?, description=?, address=?, image=? WHERE id=?"
             );
-            $stmt->execute([$name, $category, $description, $image, $id]);
+            $stmt->execute([$name, $category, $description, $address, $image, $id]);
         } else {
             $stmt = $this->db->prepare(
-                "UPDATE restaurants SET name=?, category=?, description=? WHERE id=?"
+                "UPDATE restaurants SET name=?, category=?, description=?, address=? WHERE id=?"
             );
-            $stmt->execute([$name, $category, $description, $id]);
+            $stmt->execute([$name, $category, $description, $address, $id]);
         }
         return $this->getById($id);
     }

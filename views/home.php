@@ -78,6 +78,13 @@
           <textarea id="r-desc" name="description" class="impression-textarea" placeholder="e.g. Authentic tonkotsu ramen" maxlength="200"></textarea>
         </div>
         <div class="form-group">
+          <label for="r-address">
+            Address
+            <span class="char-count" id="r-address-count">0 / 100</span>
+          </label>
+          <input type="text" id="r-address" name="address" placeholder="e.g. 東京都渋谷区神宮前1-2-3" maxlength="100" />
+        </div>
+        <div class="form-group">
           <label for="r-image">Photo</label>
           <div class="upload-area" id="add-upload-area">
             <div class="upload-placeholder" id="add-upload-placeholder">

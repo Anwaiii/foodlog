@@ -16,28 +16,29 @@ class Review {
         return $stmt->fetchAll();
     }
 
-    public function create(int $restaurantId, string $date, string $orderDetails, string $impression, ?int $rating): array {
+    public function create(int $restaurantId, string $date, string $orderDetails, string $impression, ?int $rating, ?string $image): array {
         $stmt = $this->db->prepare(
-            "INSERT INTO reviews (restaurant_id, date, order_details, impression, rating) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO reviews (restaurant_id, date, order_details, impression, rating, image) VALUES (?, ?, ?, ?, ?, ?)"
         );
-        $stmt->execute([$restaurantId, $date, $orderDetails, $impression, $rating]);
+        $stmt->execute([$restaurantId, $date, $orderDetails, $impression, $rating, $image]);
         $id = $this->db->lastInsertId();
-        return [
-            'id'            => $id,
-            'restaurant_id' => $restaurantId,
-            'date'          => $date,
-            'order_details' => $orderDetails,
-            'impression'    => $impression,
-            'rating'        => $rating,
-        ];
+        $stmt2 = $this->db->prepare("SELECT * FROM reviews WHERE id = ?");
+        $stmt2->execute([$id]);
+        return $stmt2->fetch();
     }
 
-    public function update(int $id, string $date, string $orderDetails, string $impression, ?int $rating): ?array {
-        $stmt = $this->db->prepare(
-            "UPDATE reviews SET date=?, order_details=?, impression=?, rating=? WHERE id=?"
-        );
-        $stmt->execute([$date, $orderDetails, $impression, $rating, $id]);
-        if ($stmt->rowCount() === 0) return null;
+    public function update(int $id, string $date, string $orderDetails, string $impression, ?int $rating, ?string $image): ?array {
+        if ($image !== null) {
+            $stmt = $this->db->prepare(
+                "UPDATE reviews SET date=?, order_details=?, impression=?, rating=?, image=? WHERE id=?"
+            );
+            $stmt->execute([$date, $orderDetails, $impression, $rating, $image, $id]);
+        } else {
+            $stmt = $this->db->prepare(
+                "UPDATE reviews SET date=?, order_details=?, impression=?, rating=? WHERE id=?"
+            );
+            $stmt->execute([$date, $orderDetails, $impression, $rating, $id]);
+        }
 
         $stmt2 = $this->db->prepare("SELECT * FROM reviews WHERE id = ?");
         $stmt2->execute([$id]);

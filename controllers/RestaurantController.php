@@ -38,6 +38,7 @@ class RestaurantController {
         $name     = trim($_POST['name'] ?? '');
         $category = trim($_POST['category'] ?? '');
         $desc     = trim($_POST['description'] ?? '');
+        $address  = trim($_POST['address'] ?? '');
 
         if (!$name || !$category) {
             http_response_code(400);
@@ -46,13 +47,14 @@ class RestaurantController {
         }
 
         $imagePath = $this->handleUpload();
-        echo json_encode($this->model->create($name, $category, $desc, $imagePath));
+        echo json_encode($this->model->create($name, $category, $desc, $address, $imagePath));
     }
 
     private function update(int $id): void {
         $name     = trim($_POST['name'] ?? '');
         $category = trim($_POST['category'] ?? '');
         $desc     = trim($_POST['description'] ?? '');
+        $address  = trim($_POST['address'] ?? '');
 
         if (!$name || !$category) {
             http_response_code(400);
@@ -66,7 +68,7 @@ class RestaurantController {
             $imagePath = $this->handleUpload();
         }
 
-        $result = $this->model->update($id, $name, $category, $desc, $imagePath);
+        $result = $this->model->update($id, $name, $category, $desc, $address, $imagePath);
         if (!$result) {
             http_response_code(404);
             echo json_encode(['error' => 'Restaurant not found']);

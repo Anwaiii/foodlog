@@ -37,6 +37,13 @@ function renderRestaurantInfo(r) {
   document.getElementById('detail-category').textContent = r.category || '';
   document.getElementById('detail-name').textContent = r.name;
   document.getElementById('detail-desc').textContent = r.description || '';
+  const detailAddress = document.getElementById('detail-address');
+  if (r.address) {
+    detailAddress.textContent = r.address;
+    detailAddress.style.display = 'block';
+  } else {
+    detailAddress.style.display = 'none';
+  }
 
   const idx = restaurantList.indexOf(r);
   const bannerImg = document.getElementById('banner-img');
@@ -108,11 +115,13 @@ function renderReviews() {
             data-order="${esc(rv.order_details)}"
             data-impression="${esc(rv.impression)}"
             data-rating="${rv.rating || ''}"
+            data-image="${rv.image || ''}"
             title="Edit">✏️</button>
           <button class="review-delete" data-id="${rv.id}" title="Delete">🗑</button>
         </div>
       </div>
       ${stars ? `<div style="font-size:0.9rem;margin-bottom:0.5rem;">${stars}</div>` : ''}
+      ${rv.image ? `<img src="/foodlog/${rv.image}" alt="Review photo" style="max-width:100%;border-radius:8px;margin-bottom:0.5rem;display:block;" />` : ''}
       <div class="review-order">${nl2br(rv.order_details)}</div>
       <div class="review-impression">${nl2br(rv.impression)}</div>`;
     list.appendChild(item);
@@ -150,22 +159,23 @@ document.getElementById('review-form').addEventListener('submit', async e => {
   const date       = document.getElementById('rv-date').value;
   const order      = document.getElementById('rv-order').value.trim();
   const impression = document.getElementById('rv-impression').value.trim();
-  const rating     = document.getElementById('rv-rating').value;
   if (!date || !order || !impression) return;
 
   const btn = e.target.querySelector('button[type="submit"]');
   btn.textContent = '保存中…'; btn.disabled = true;
 
+  const formData = new FormData(e.target);
+  formData.append('restaurant_id', restaurantId);
+
   await fetch('/foodlog/api/reviews.php', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ restaurant_id: restaurantId, date, order_details: order, impression, rating }),
+    body: formData,
   });
 
-  document.getElementById('rv-order').value = '';
-  document.getElementById('rv-impression').value = '';
-  document.getElementById('rv-rating').value = '';
+  document.getElementById('review-form').reset();
   document.getElementById('rv-date').value = today;
+  document.getElementById('rv-image-preview').style.display = 'none';
+  document.getElementById('rv-upload-placeholder').style.display = 'flex';
   btn.textContent = 'Save Review'; btn.disabled = false;
 
   loadReviews();
@@ -224,6 +234,7 @@ document.getElementById('edit-info-btn').addEventListener('click', () => {
   document.getElementById('edit-name').value     = currentRestaurant.name || '';
   document.getElementById('edit-category').value = currentRestaurant.category || '';
   document.getElementById('edit-desc').value     = currentRestaurant.description || '';
+  document.getElementById('edit-address').value  = currentRestaurant.address || '';
 
   // 現在の画像をプレビューに表示
   const preview     = document.getElementById('edit-image-preview');
@@ -284,6 +295,18 @@ function openEditReviewModal(data) {
   document.getElementById('edit-rv-order').value          = data.order;
   document.getElementById('edit-rv-impression').value     = data.impression;
   document.getElementById('edit-rv-rating').value         = data.rating || '';
+
+  const preview = document.getElementById('edit-rv-image-preview');
+  const placeholder = document.getElementById('edit-rv-upload-placeholder');
+  if (data.image) {
+    preview.src = `/foodlog/${data.image}`;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+  } else {
+    preview.style.display = 'none';
+    placeholder.style.display = 'flex';
+  }
+
   editReviewModal.classList.add('open');
   document.getElementById('edit-rv-order').focus();
 }
@@ -302,16 +325,15 @@ document.getElementById('edit-review-form').addEventListener('submit', async e =
   const date       = document.getElementById('edit-rv-date').value;
   const order      = document.getElementById('edit-rv-order').value.trim();
   const impression = document.getElementById('edit-rv-impression').value.trim();
-  const rating     = document.getElementById('edit-rv-rating').value;
   if (!date || !order || !impression) return;
 
   const btn = e.target.querySelector('button[type="submit"]');
   btn.textContent = '保存中…'; btn.disabled = true;
 
+  const formData = new FormData(e.target);
   await fetch(`/foodlog/api/reviews.php?id=${id}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date, order_details: order, impression, rating }),
+    body: formData,
   });
 
   btn.textContent = 'Save Changes'; btn.disabled = false;
@@ -345,6 +367,8 @@ function setupDateMax(inputId) {
 // ─── 初期化 ──────────────────────────────────────────────────────────────────
 function init() {
   setupUploadArea('edit-upload-area', 'edit-upload-placeholder', 'edit-image-preview', 'edit-image');
+  setupUploadArea('rv-upload-area', 'rv-upload-placeholder', 'rv-image-preview', 'rv-image');
+  setupUploadArea('edit-rv-upload-area', 'edit-rv-upload-placeholder', 'edit-rv-image-preview', 'edit-rv-image');
 
   // 未来日禁止
   setupDateMax('rv-date');
@@ -358,6 +382,7 @@ function init() {
   setupCharCounter('edit-name', 'edit-name-count');
   setupCharCounter('edit-category', 'edit-category-count');
   setupCharCounter('edit-desc', 'edit-desc-count');
+  setupCharCounter('edit-address', 'edit-address-count');
 
   // Edit Review モーダル
   setupCharCounter('edit-rv-order', 'edit-order-count');
