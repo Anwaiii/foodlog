@@ -62,7 +62,7 @@
           </div>
           <div class="form-group">
             <label for="rv-rating">Rating (1–5 ⭐)</label>
-            <input type="number" id="rv-rating" min="1" max="5" placeholder="5" />
+            <input type="number" id="rv-rating" min="1" max="5" placeholder="5" required />
           </div>
           <button type="submit" class="btn-submit" style="width:100%;padding:0.85rem;">Save Review</button>
         </form>
@@ -150,7 +150,7 @@
         </div>
         <div class="form-group">
           <label for="edit-rv-rating">Rating (1–5 ⭐)</label>
-          <input type="number" id="edit-rv-rating" min="1" max="5" placeholder="5" />
+          <input type="number" id="edit-rv-rating" min="1" max="5" placeholder="5" required />
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-cancel" id="cancel-edit-review-btn">Cancel</button>

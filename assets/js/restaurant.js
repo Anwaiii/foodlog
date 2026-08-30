@@ -92,6 +92,11 @@ function renderReviews() {
     const formatted = new Date(rv.date + 'T00:00:00').toLocaleDateString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric'
     });
+    // HTMLエスケープ
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    // 改行を<br>に変換
+    const nl2br = s => esc(s).replace(/\n/g, '<br>');
+
     const item = document.createElement('div');
     item.className = 'review-item';
     item.innerHTML = `
@@ -100,16 +105,16 @@ function renderReviews() {
         <div style="display:flex;gap:6px;">
           <button class="review-edit" data-id="${rv.id}"
             data-date="${rv.date}"
-            data-order="${rv.order_details.replace(/"/g,'&quot;')}"
-            data-impression="${rv.impression.replace(/"/g,'&quot;')}"
+            data-order="${esc(rv.order_details)}"
+            data-impression="${esc(rv.impression)}"
             data-rating="${rv.rating || ''}"
             title="Edit">✏️</button>
           <button class="review-delete" data-id="${rv.id}" title="Delete">🗑</button>
         </div>
       </div>
       ${stars ? `<div style="font-size:0.9rem;margin-bottom:0.5rem;">${stars}</div>` : ''}
-      <div class="review-order">🛒 <span>${rv.order_details}</span></div>
-      <div class="review-impression" style="margin-top:0.6rem;">${rv.impression}</div>`;
+      <div class="review-order">${nl2br(rv.order_details)}</div>
+      <div class="review-impression">${nl2br(rv.impression)}</div>`;
     list.appendChild(item);
   });
 
