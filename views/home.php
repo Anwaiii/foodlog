@@ -14,6 +14,11 @@
       <span class="logo-icon">🍜</span>
       <span>FoodLog</span>
     </a>
+    <div class="nav-links">
+      <a href="/foodlog/" class="nav-link active">Home</a>
+      <a href="/foodlog/stats.php" class="nav-link">Stats</a>
+      <a href="/foodlog/search.php" class="nav-link">Search</a>
+    </div>
     <div class="nav-right">
       <span class="badge" id="total-reviews-badge">0 Reviews</span>
     </div>
