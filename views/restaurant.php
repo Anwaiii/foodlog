@@ -47,14 +47,14 @@
         <form id="review-form" enctype="multipart/form-data">
           <div class="form-group">
             <label for="rv-date">Date</label>
-            <input type="date" id="rv-date" required />
+            <input type="date" id="rv-date" name="date" required />
           </div>
           <div class="form-group">
             <label for="rv-order">
               What did you order?
               <span class="char-count" id="order-count">0 / 200</span>
             </label>
-            <textarea id="rv-order" class="order-textarea" rows="3"
+            <textarea id="rv-order" name="order_details" class="order-textarea" rows="3"
               placeholder="e.g. Tonkotsu Ramen&#10;Gyoza&#10;Karaage" maxlength="200" required></textarea>
           </div>
           <div class="form-group">
@@ -62,7 +62,7 @@
               Your Impression
               <span class="char-count" id="impression-count">0 / 500</span>
             </label>
-            <textarea id="rv-impression" class="impression-textarea"
+            <textarea id="rv-impression" name="impression" class="impression-textarea"
               placeholder="How was it? Taste, delivery time, value…"
               maxlength="500" required></textarea>
           </div>
@@ -156,21 +156,21 @@
         <input type="hidden" id="edit-review-id" />
         <div class="form-group">
           <label for="edit-rv-date">Date</label>
-          <input type="date" id="edit-rv-date" required />
+          <input type="date" id="edit-rv-date" name="date" required />
         </div>
         <div class="form-group">
           <label for="edit-rv-order">
             What did you order?
             <span class="char-count" id="edit-order-count">0 / 200</span>
           </label>
-          <textarea id="edit-rv-order" class="order-textarea" rows="3" placeholder="e.g. Tonkotsu Ramen&#10;Gyoza" maxlength="200" required></textarea>
+          <textarea id="edit-rv-order" name="order_details" class="order-textarea" rows="3" placeholder="e.g. Tonkotsu Ramen&#10;Gyoza" maxlength="200" required></textarea>
         </div>
         <div class="form-group">
           <label for="edit-rv-impression">
             Your Impression
             <span class="char-count" id="edit-impression-count">0 / 500</span>
           </label>
-          <textarea id="edit-rv-impression" class="impression-textarea" placeholder="How was it?" maxlength="500" required></textarea>
+          <textarea id="edit-rv-impression" name="impression" class="impression-textarea" placeholder="How was it?" maxlength="500" required></textarea>
         </div>
         <div class="form-group">
           <label for="edit-rv-rating">Rating (1–5 ⭐)</label>
