@@ -1,1 +1,4 @@
-<?php require_once __DIR__ . '/views/home.php'; ?>
+<?php
+
+// Forward to Laravel public/index.php
+require_once __DIR__ . '/public/index.php';
