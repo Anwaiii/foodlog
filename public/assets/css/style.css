@@ -258,14 +258,20 @@ body {
 
 /* REVIEWS */
 .reviews-panel h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.2rem; }
-#reviews-list {
+.reviews-columns {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   align-items: start;
 }
-@media (max-width: 700px) { #reviews-list { grid-template-columns: 1fr; } }
-.reviews-empty { grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--muted); }
+.reviews-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+@media (max-width: 700px) { .reviews-columns { grid-template-columns: 1fr; } }
+.reviews-empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
 .reviews-empty .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
 
 /* REVIEW ITEM */

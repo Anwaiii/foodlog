@@ -99,7 +99,17 @@ function renderReviews() {
   const userId   = window.AUTH ? window.AUTH.userId : null;
 
   list.innerHTML = '';
-  pageReviews.forEach(rv => {
+  const columns = document.createElement('div');
+  columns.className = 'reviews-columns';
+  const colLeft = document.createElement('div');
+  colLeft.className = 'reviews-col';
+  const colRight = document.createElement('div');
+  colRight.className = 'reviews-col';
+  columns.appendChild(colLeft);
+  columns.appendChild(colRight);
+  list.appendChild(columns);
+
+  pageReviews.forEach((rv, idx) => {
     const stars = rv.rating ? '⭐'.repeat(Number(rv.rating)) : '';
     const formatted = new Date(rv.date + 'T00:00:00').toLocaleDateString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric'
@@ -143,7 +153,7 @@ function renderReviews() {
       ${rv.image ? `<img src="/foodlog/${rv.image}" alt="Review photo" class="review-photo" />` : ''}
       <div class="review-order">${nl2br(rv.order_details)}</div>
       <div class="review-impression">${nl2br(rv.impression)}</div>`;
-    list.appendChild(item);
+    (idx % 2 === 0 ? colLeft : colRight).appendChild(item);
   });
 
   list.querySelectorAll('.review-delete').forEach(btn => {
