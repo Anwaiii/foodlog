@@ -813,8 +813,8 @@ footer {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 2.6rem 1.25rem 1.1rem;
-  width: min(820px, 92vw);
-  height: min(620px, 86vh);
+  width: min(1040px, 94vw);
+  height: min(760px, 90vh);
   display: flex;
   flex-direction: column;
   align-items: center;
