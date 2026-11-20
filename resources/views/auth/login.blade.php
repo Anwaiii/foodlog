@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
@@ -31,7 +31,7 @@
         <div class="form-group">
           <label for="login_id">会員ID または メールアドレス</label>
           <input type="text" id="login_id" name="login_id" value="{{ old('login_id') }}"
-                 placeholder="e.g. admin01 / user01@foodlog.local" required autofocus />
+                 placeholder="e.g. user01 / user01@foodlog.local" required autofocus />
         </div>
         <div class="form-group">
           <label for="password">パスワード</label>
