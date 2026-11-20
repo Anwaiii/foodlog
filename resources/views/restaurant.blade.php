@@ -1,10 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>Restaurant — FoodLog</title>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261120e" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261120f" />
 </head>
 <body>
 
@@ -209,6 +210,6 @@
       userId: {{ Auth::check() ? Auth::id() : 'null' }}
     };
   </script>
-  <script src="/foodlog/assets/js/restaurant.js?v=20261120c"></script>
+  <script src="/foodlog/assets/js/restaurant.js?v=20261120f"></script>
 </body>
 </html>

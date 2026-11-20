@@ -5,6 +5,18 @@ const GRADIENTS = [
   'linear-gradient(135deg, #0d1a00 0%, #3a5e00 100%)',
 ];
 
+function csrfHeaders() {
+  const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+  return { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' };
+}
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined && text !== null) node.textContent = text;
+  return node;
+}
+
 async function loadRestaurants() {
   const res = await fetch('/foodlog/api/restaurants.php');
   return res.json();
@@ -12,60 +24,91 @@ async function loadRestaurants() {
 
 function renderGrid(restaurants) {
   const grid = document.getElementById('restaurant-grid');
-  grid.innerHTML = '';
+  grid.replaceChildren();
+
   if (!restaurants.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽️</div><p>No restaurants yet. Add one!</p></div>`;
+    const empty = el('div', 'empty-state');
+    empty.append(el('div', 'empty-icon', '🍽️'), el('p', '', 'No restaurants yet. Add one!'));
+    grid.appendChild(empty);
     return;
   }
+
   let totalReviews = 0;
+  const isAdmin = Boolean(window.AUTH && window.AUTH.isAdmin);
+
   restaurants.forEach((r, idx) => {
     const count = parseInt(r.review_count) || 0;
     totalReviews += count;
-    const card = document.createElement('a');
-    card.className = 'restaurant-card';
-    card.href = `/foodlog/restaurant.php?id=${r.id}`;
-    const gradient = GRADIENTS[idx % GRADIENTS.length];
-    const imgSrc = r.image ? `/foodlog/${r.image}` : null;
-    let imageHtml = imgSrc
-      ? `<img class="card-image" src="${imgSrc}" alt="${r.name}" loading="lazy"
-           onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-         <div class="card-image-placeholder" style="display:none;background:${gradient}">🍽️</div>`
-      : `<div class="card-image-placeholder" style="background:${gradient}">🍽️</div>`;
-    const isAdmin = Boolean(window.AUTH && window.AUTH.isAdmin);
-    const deleteBtnHtml = isAdmin
-      ? `<button class="card-delete-btn" data-id="${r.id}" data-name="${r.name.replace(/"/g,'&quot;')}" title="Delete">🗑</button>`
-      : '';
-    card.innerHTML = `${imageHtml}
-      ${deleteBtnHtml}
-      <div class="card-body">
-        <div class="card-category">${r.category || ''}</div>
-        <div class="card-name">${r.name}</div>
-        <div class="card-desc">${r.description || ''}</div>
-        ${r.address ? `<div class="card-address" style="font-size:0.85rem;color:var(--muted);margin-top:0.4rem;">📍 ${r.address}</div>` : ''}
-        <div class="card-footer">
-          <div class="review-count"><strong>${count}</strong> ${count === 1 ? 'review' : 'reviews'}</div>
-          <div class="card-arrow">→</div>
-        </div>
-      </div>`;
-    grid.appendChild(card);
-  });
 
-  // 削除ボタン（カードクリックを伝播させない）
-  grid.querySelectorAll('.card-delete-btn').forEach(btn => {
-    btn.addEventListener('click', async e => {
-      e.preventDefault();
-      e.stopPropagation();
-      const name = btn.dataset.name;
-      if (!confirm(`「${name}」を削除しますか？\nすべてのレビューも削除されます。`)) return;
-      btn.textContent = '…'; btn.disabled = true;
-      const res = await fetch(`/foodlog/api/restaurants.php?id=${btn.dataset.id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        alert('削除権限がありません。');
-        btn.textContent = '🗑'; btn.disabled = false;
-        return;
-      }
-      init();
-    });
+    const card = el('a', 'restaurant-card');
+    card.href = `/foodlog/restaurant.php?id=${encodeURIComponent(r.id)}`;
+
+    const gradient = GRADIENTS[idx % GRADIENTS.length];
+    const placeholder = el('div', 'card-image-placeholder', '🍽️');
+    placeholder.style.background = gradient;
+
+    if (r.image) {
+      const img = el('img', 'card-image');
+      img.src = `/foodlog/${r.image}`;
+      img.alt = r.name || '';
+      img.loading = 'lazy';
+      placeholder.style.display = 'none';
+      img.addEventListener('error', () => {
+        img.style.display = 'none';
+        placeholder.style.display = 'flex';
+      });
+      card.append(img, placeholder);
+    } else {
+      card.appendChild(placeholder);
+    }
+
+    if (isAdmin) {
+      const delBtn = el('button', 'card-delete-btn', '🗑');
+      delBtn.type = 'button';
+      delBtn.title = 'Delete';
+      delBtn.addEventListener('click', async e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!confirm(`「${r.name}」を削除しますか？\nすべてのレビューも削除されます。`)) return;
+        delBtn.textContent = '…';
+        delBtn.disabled = true;
+        const res = await fetch(`/foodlog/api/restaurants.php?id=${encodeURIComponent(r.id)}`, {
+          method: 'DELETE',
+          headers: csrfHeaders(),
+        });
+        if (!res.ok) {
+          alert('削除権限がありません。');
+          delBtn.textContent = '🗑';
+          delBtn.disabled = false;
+          return;
+        }
+        init();
+      });
+      card.appendChild(delBtn);
+    }
+
+    const body = el('div', 'card-body');
+    body.append(
+      el('div', 'card-category', r.category || ''),
+      el('div', 'card-name', r.name || ''),
+      el('div', 'card-desc', r.description || '')
+    );
+
+    if (r.address) {
+      const addr = el('div', 'card-address', `📍 ${r.address}`);
+      addr.style.cssText = 'font-size:0.85rem;color:var(--muted);margin-top:0.4rem;';
+      body.appendChild(addr);
+    }
+
+    const footer = el('div', 'card-footer');
+    const reviewCountEl = el('div', 'review-count');
+    const strong = el('strong', '', String(count));
+    reviewCountEl.append(strong, document.createTextNode(count === 1 ? ' review' : ' reviews'));
+    footer.append(reviewCountEl, el('div', 'card-arrow', '→'));
+    body.appendChild(footer);
+
+    card.appendChild(body);
+    grid.appendChild(card);
   });
 
   document.getElementById('stat-restaurants').textContent = restaurants.length;
@@ -147,7 +190,11 @@ if (addForm) {
   addForm.addEventListener('submit', async e => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const res = await fetch('/foodlog/api/restaurants.php', { method: 'POST', body: formData });
+    const res = await fetch('/foodlog/api/restaurants.php', {
+      method: 'POST',
+      headers: csrfHeaders(),
+      body: formData,
+    });
     if (!res.ok) {
       alert('追加権限がありません。');
       return;
@@ -178,7 +225,6 @@ function setupCharCounter(inputId, counterId) {
 async function init() {
   setupUploadArea('add-upload-area', 'add-upload-placeholder', 'add-image-preview', 'r-image');
 
-  // Add Restaurant モーダルの文字数カウンター
   setupCharCounter('r-name', 'r-name-count');
   setupCharCounter('r-category', 'r-category-count');
   setupCharCounter('r-desc', 'r-desc-count');

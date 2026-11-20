@@ -5,6 +5,26 @@ const GRADIENTS = [
   'linear-gradient(135deg, #0d1a00 0%, #3a5e00 100%)',
 ];
 
+function csrfHeaders() {
+  const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+  return { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' };
+}
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined && text !== null) node.textContent = text;
+  return node;
+}
+
+function appendTextWithBreaks(parent, text) {
+  const lines = String(text || '').split('\n');
+  lines.forEach((line, i) => {
+    if (i > 0) parent.appendChild(document.createElement('br'));
+    parent.appendChild(document.createTextNode(line));
+  });
+}
+
 // ─── URLパラメータ ────────────────────────────────────────────────────────────
 const params = new URLSearchParams(window.location.search);
 const restaurantId = params.get('id');
@@ -14,11 +34,9 @@ const today = new Date().toISOString().split('T')[0];
 const rvDateInput = document.getElementById('rv-date');
 if (rvDateInput) rvDateInput.value = today;
 
-// 現在のレストランデータをキャッシュ
 let currentRestaurant = null;
 let restaurantList = [];
 
-// ページネーション用
 const REVIEWS_PER_PAGE = 10;
 let allReviews = [];
 let currentPage = 1;
@@ -66,15 +84,15 @@ function renderRestaurantInfo(r) {
 }
 
 function showPlaceholder(idx) {
-  const el = document.getElementById('banner-placeholder');
-  el.style.background = GRADIENTS[idx % GRADIENTS.length];
-  el.style.display = 'flex';
-  el.textContent = '🍽️';
+  const elPlaceholder = document.getElementById('banner-placeholder');
+  elPlaceholder.style.background = GRADIENTS[idx % GRADIENTS.length];
+  elPlaceholder.style.display = 'flex';
+  elPlaceholder.textContent = '🍽️';
 }
 
 // ─── レビューの読み込み・描画 ─────────────────────────────────────────────────
 async function loadReviews() {
-  const res = await fetch(`/foodlog/api/reviews.php?restaurant_id=${restaurantId}`);
+  const res = await fetch(`/foodlog/api/reviews.php?restaurant_id=${encodeURIComponent(restaurantId)}`);
   allReviews = await res.json();
   currentPage = 1;
   renderReviews();
@@ -87,10 +105,15 @@ function renderReviews() {
   const start = (currentPage - 1) * REVIEWS_PER_PAGE;
   const pageReviews = allReviews.slice(start, start + REVIEWS_PER_PAGE);
 
-  document.getElementById('review-count-badge').textContent = total + ' Reviews';
+  const badge = document.getElementById('review-count-badge');
+  if (badge) badge.textContent = total + ' Reviews';
+
+  list.replaceChildren();
 
   if (!total) {
-    list.innerHTML = `<div class="reviews-empty"><div class="empty-icon">📋</div><p>No reviews yet.</p></div>`;
+    const empty = el('div', 'reviews-empty');
+    empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'No reviews yet.'));
+    list.appendChild(empty);
     return;
   }
 
@@ -98,15 +121,10 @@ function renderReviews() {
   const isAdmin  = Boolean(window.AUTH && window.AUTH.isAdmin);
   const userId   = window.AUTH ? window.AUTH.userId : null;
 
-  list.innerHTML = '';
-  const columns = document.createElement('div');
-  columns.className = 'reviews-columns';
-  const colLeft = document.createElement('div');
-  colLeft.className = 'reviews-col';
-  const colRight = document.createElement('div');
-  colRight.className = 'reviews-col';
-  columns.appendChild(colLeft);
-  columns.appendChild(colRight);
+  const columns = el('div', 'reviews-columns');
+  const colLeft = el('div', 'reviews-col');
+  const colRight = el('div', 'reviews-col');
+  columns.append(colLeft, colRight);
   list.appendChild(columns);
 
   pageReviews.forEach((rv, idx) => {
@@ -114,129 +132,153 @@ function renderReviews() {
     const formatted = new Date(rv.date + 'T00:00:00').toLocaleDateString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric'
     });
-    const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const nl2br = s => esc(s).replace(/\n/g, '<br>');
 
     const isOwner = loggedIn && userId !== null && rv.member_id !== null && Number(rv.member_id) === Number(userId);
     const canEdit = isOwner;
     const canDelete = isOwner || isAdmin;
 
-    const editBtnHtml = canEdit ? `
-      <button class="review-edit" data-id="${rv.id}"
-        data-date="${rv.date}"
-        data-order="${esc(rv.order_details)}"
-        data-impression="${esc(rv.impression)}"
-        data-rating="${rv.rating || ''}"
-        data-image="${rv.image || ''}"
-        title="Edit">✏️</button>` : '';
-    const deleteBtnHtml = canDelete ? `
-      <button class="review-delete" data-id="${rv.id}" title="Delete">🗑</button>` : '';
+    const item = el('div', 'review-item');
 
-    const authorHtml = rv.member_nickname
-      ? `<span class="review-author">👤 ${esc(rv.member_nickname)}</span>`
-      : '';
+    const header = el('div', 'review-item-header');
+    const leftMeta = el('div');
+    leftMeta.style.cssText = 'display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;';
+    leftMeta.appendChild(el('div', 'review-date', `📅 ${formatted}`));
+    if (rv.member_nickname) {
+      leftMeta.appendChild(el('span', 'review-author', `👤 ${rv.member_nickname}`));
+    }
 
-    const item = document.createElement('div');
-    item.className = 'review-item';
-    item.innerHTML = `
-      <div class="review-item-header">
-        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
-          <div class="review-date">📅 ${formatted}</div>
-          ${authorHtml}
-        </div>
-        <div style="display:flex;gap:6px;">
-          ${editBtnHtml}
-          ${deleteBtnHtml}
-        </div>
-      </div>
-      ${stars ? `<div style="font-size:0.9rem;margin-bottom:0.5rem;">${stars}</div>` : ''}
-      ${rv.image ? `<img src="/foodlog/${rv.image}" alt="Review photo" class="review-photo" />` : ''}
-      <div class="review-order">${nl2br(rv.order_details)}</div>
-      <div class="review-impression">${nl2br(rv.impression)}</div>`;
+    const actions = el('div');
+    actions.style.cssText = 'display:flex;gap:6px;';
+    if (canEdit) {
+      const editBtn = el('button', 'review-edit', '✏️');
+      editBtn.type = 'button';
+      editBtn.title = 'Edit';
+      editBtn.dataset.id = rv.id;
+      editBtn.dataset.date = rv.date;
+      editBtn.dataset.order = rv.order_details || '';
+      editBtn.dataset.impression = rv.impression || '';
+      editBtn.dataset.rating = rv.rating || '';
+      editBtn.dataset.image = rv.image || '';
+      editBtn.addEventListener('click', () => openEditReviewModal(editBtn.dataset));
+      actions.appendChild(editBtn);
+    }
+    if (canDelete) {
+      const delBtn = el('button', 'review-delete', '🗑');
+      delBtn.type = 'button';
+      delBtn.title = 'Delete';
+      delBtn.dataset.id = rv.id;
+      delBtn.addEventListener('click', () => deleteReview(delBtn.dataset.id));
+      actions.appendChild(delBtn);
+    }
+
+    header.append(leftMeta, actions);
+    item.appendChild(header);
+
+    if (stars) {
+      const starsEl = el('div', '', stars);
+      starsEl.style.cssText = 'font-size:0.9rem;margin-bottom:0.5rem;';
+      item.appendChild(starsEl);
+    }
+
+    if (rv.image) {
+      const img = el('img', 'review-photo');
+      img.src = `/foodlog/${rv.image}`;
+      img.alt = 'Review photo';
+      item.appendChild(img);
+    }
+
+    const orderEl = el('div', 'review-order');
+    appendTextWithBreaks(orderEl, rv.order_details);
+    item.appendChild(orderEl);
+
+    const impEl = el('div', 'review-impression');
+    appendTextWithBreaks(impEl, rv.impression);
+    item.appendChild(impEl);
+
     (idx % 2 === 0 ? colLeft : colRight).appendChild(item);
-  });
-
-  list.querySelectorAll('.review-delete').forEach(btn => {
-    btn.addEventListener('click', () => deleteReview(btn.dataset.id));
-  });
-  list.querySelectorAll('.review-edit').forEach(btn => {
-    btn.addEventListener('click', () => openEditReviewModal(btn.dataset));
   });
 
   // ページネーションUI
   if (totalPages > 1) {
-    const nav = document.createElement('div');
-    nav.className = 'pagination';
+    const nav = el('div', 'pagination');
 
-    let pageButtonsHtml = `<button class="pagination-num ${currentPage === 1 ? 'active' : ''}" data-page="1">1</button>`;
-    const windowSize = 9; // 1ページ目を含めて最大10個分を表示
-    let start = Math.max(2, currentPage - 4);
-    let end = Math.min(totalPages, start + windowSize - 1);
-    if (end - start + 1 < windowSize) {
-      start = Math.max(2, end - windowSize + 1);
-    }
+    const prevBtn = el('button', 'pagination-btn', '← Prev');
+    prevBtn.id = 'pg-prev';
+    prevBtn.type = 'button';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.addEventListener('click', () => { currentPage--; renderReviews(); });
 
-    if (start > 2) {
-      pageButtonsHtml += `<span class="pagination-ellipsis">…</span>`;
-    }
-    for (let p = start; p <= end; p++) {
-      pageButtonsHtml += `<button class="pagination-num ${currentPage === p ? 'active' : ''}" data-page="${p}">${p}</button>`;
-    }
-    if (end < totalPages) {
-      pageButtonsHtml += `<span class="pagination-ellipsis">…</span>`;
-    }
-
-    nav.innerHTML = `
-      <button class="pagination-btn" id="pg-prev" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>
-      <div class="pagination-numbers">${pageButtonsHtml}</div>
-      <button class="pagination-btn" id="pg-next" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>
-      <div class="pagination-jump">
-        <input type="text" inputmode="numeric" id="pg-jump-input" class="pagination-input"
-               placeholder="1-${totalPages}" aria-label="ページ番号" title="1〜${totalPages}の数字を入力してEnter" />
-        <span class="pagination-total">/ ${totalPages}</span>
-      </div>`;
-    list.appendChild(nav);
-
-    document.getElementById('pg-prev').addEventListener('click', () => { currentPage--; renderReviews(); });
-    document.getElementById('pg-next').addEventListener('click', () => { currentPage++; renderReviews(); });
-    nav.querySelectorAll('.pagination-num').forEach(btn => {
-      btn.addEventListener('click', () => {
-        currentPage = Number(btn.dataset.page);
+    const numbersWrap = el('div', 'pagination-numbers');
+    const appendPageNum = p => {
+      const b = el('button', `pagination-num ${currentPage === p ? 'active' : ''}`.trim(), String(p));
+      b.type = 'button';
+      b.dataset.page = String(p);
+      b.addEventListener('click', () => {
+        currentPage = p;
         renderReviews();
       });
+      numbersWrap.appendChild(b);
+    };
+
+    appendPageNum(1);
+    const windowSize = 9;
+    let pStart = Math.max(2, currentPage - 4);
+    let pEnd = Math.min(totalPages, pStart + windowSize - 1);
+    if (pEnd - pStart + 1 < windowSize) {
+      pStart = Math.max(2, pEnd - windowSize + 1);
+    }
+    if (pStart > 2) numbersWrap.appendChild(el('span', 'pagination-ellipsis', '…'));
+    for (let p = pStart; p <= pEnd; p++) appendPageNum(p);
+    if (pEnd < totalPages) numbersWrap.appendChild(el('span', 'pagination-ellipsis', '…'));
+
+    const nextBtn = el('button', 'pagination-btn', 'Next →');
+    nextBtn.id = 'pg-next';
+    nextBtn.type = 'button';
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.addEventListener('click', () => { currentPage++; renderReviews(); });
+
+    const jumpWrap = el('div', 'pagination-jump');
+    const jumpInput = el('input', 'pagination-input');
+    jumpInput.type = 'text';
+    jumpInput.inputMode = 'numeric';
+    jumpInput.id = 'pg-jump-input';
+    jumpInput.placeholder = `1-${totalPages}`;
+    jumpInput.setAttribute('aria-label', 'ページ番号');
+    jumpInput.title = `1〜${totalPages}の数字を入力してEnter`;
+
+    jumpInput.addEventListener('input', () => {
+      let val = jumpInput.value
+        .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+        .replace(/[^0-9]/g, '')
+        .replace(/^0+/, '');
+      if (val !== '') {
+        const num = parseInt(val, 10);
+        if (num > totalPages) val = String(totalPages);
+      }
+      jumpInput.value = val;
+    });
+    jumpInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const num = parseInt(jumpInput.value, 10);
+        if (num >= 1 && num <= totalPages) {
+          currentPage = num;
+          renderReviews();
+        }
+      }
     });
 
-    const jumpInput = document.getElementById('pg-jump-input');
-    if (jumpInput) {
-      jumpInput.addEventListener('input', () => {
-        let val = jumpInput.value
-          .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
-          .replace(/[^0-9]/g, '')
-          .replace(/^0+/, '');
-        if (val !== '') {
-          const num = parseInt(val, 10);
-          if (num > totalPages) {
-            val = String(totalPages);
-          }
-        }
-        jumpInput.value = val;
-      });
-      jumpInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const num = parseInt(jumpInput.value, 10);
-          if (num >= 1 && num <= totalPages) {
-            currentPage = num;
-            renderReviews();
-          }
-        }
-      });
-    }
+    jumpWrap.append(jumpInput, el('span', 'pagination-total', `/ ${totalPages}`));
+    nav.append(prevBtn, numbersWrap, nextBtn, jumpWrap);
+    list.appendChild(nav);
   }
 }
 
 async function deleteReview(id) {
-  const res = await fetch(`/foodlog/api/reviews.php?id=${id}`, { method: 'DELETE' });
+  const res = await fetch(`/foodlog/api/reviews.php?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: csrfHeaders(),
+  });
   if (!res.ok) {
     alert('削除権限がありません。');
     return;
@@ -289,6 +331,7 @@ if (reviewForm) {
 
     const res = await fetch('/foodlog/api/reviews.php', {
       method: 'POST',
+      headers: csrfHeaders(),
       body: formData,
     });
 
@@ -344,7 +387,10 @@ if (deleteRestaurantBtn) {
     const name = currentRestaurant ? currentRestaurant.name : 'このレストラン';
     if (!confirm(`「${name}」を削除しますか？\nすべてのレビューも削除されます。`)) return;
     deleteRestaurantBtn.textContent = '削除中…'; deleteRestaurantBtn.disabled = true;
-    const res = await fetch(`/foodlog/api/restaurants.php?id=${restaurantId}`, { method: 'DELETE' });
+    const res = await fetch(`/foodlog/api/restaurants.php?id=${encodeURIComponent(restaurantId)}`, {
+      method: 'DELETE',
+      headers: csrfHeaders(),
+    });
     if (!res.ok) {
       alert('削除権限がありません。');
       deleteRestaurantBtn.textContent = '🗑 Delete'; deleteRestaurantBtn.disabled = false;
@@ -408,8 +454,9 @@ if (editRestaurantForm) {
     btn.textContent = '保存中…'; btn.disabled = true;
 
     const formData = new FormData(e.target);
-    const res = await fetch(`/foodlog/api/restaurants.php?id=${restaurantId}`, {
+    const res = await fetch(`/foodlog/api/restaurants.php?id=${encodeURIComponent(restaurantId)}`, {
       method: 'POST',
+      headers: csrfHeaders(),
       body: formData,
     });
 
@@ -486,8 +533,9 @@ if (editReviewForm) {
     btn.textContent = '保存中…'; btn.disabled = true;
 
     const formData = new FormData(e.target);
-    const res = await fetch(`/foodlog/api/reviews.php?id=${id}`, {
+    const res = await fetch(`/foodlog/api/reviews.php?id=${encodeURIComponent(id)}`, {
       method: 'POST',
+      headers: csrfHeaders(),
       body: formData,
     });
 

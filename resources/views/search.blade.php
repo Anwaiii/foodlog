@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -58,6 +58,6 @@
 
   <footer><p>FoodLog — Data saved in MySQL database 🗄️</p></footer>
 
-  <script src="/foodlog/assets/js/search.js?v=20261120d"></script>
+  <script src="/foodlog/assets/js/search.js?v=20261120f"></script>
 </body>
 </html>

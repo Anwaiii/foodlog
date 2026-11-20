@@ -1,11 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>FoodLog — Uber Eats Review Tracker</title>
   <meta name="description" content="Track and review your Uber Eats orders." />
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261120e" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261120f" />
 </head>
 <body>
 
@@ -106,6 +107,6 @@
       userId: {{ Auth::check() ? Auth::id() : 'null' }}
     };
   </script>
-  <script src="/foodlog/assets/js/app.js?v=20261120d"></script>
+  <script src="/foodlog/assets/js/app.js?v=20261120f"></script>
 </body>
 </html>
