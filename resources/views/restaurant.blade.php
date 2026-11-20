@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>Restaurant — FoodLog</title>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261121a" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261121b" />
 </head>
 <body>
 
@@ -224,6 +224,15 @@
   </div>
   @endauth
 
+  <!-- Photo Lightbox Modal -->
+  <div class="modal-overlay" id="photo-lightbox-modal">
+    <div class="photo-lightbox-box">
+      <button type="button" class="photo-lightbox-close" id="photo-lightbox-close" aria-label="閉じる">✕</button>
+      <img id="photo-lightbox-img" class="photo-lightbox-img" src="" alt="Enlarged review photo" />
+      <p id="photo-lightbox-caption" class="photo-lightbox-caption"></p>
+    </div>
+  </div>
+
   <script>
     window.AUTH = {
       loggedIn: {{ Auth::check() ? 'true' : 'false' }},
@@ -231,6 +240,6 @@
       userId: {{ Auth::check() ? Auth::id() : 'null' }}
     };
   </script>
-  <script src="/foodlog/assets/js/restaurant.js?v=20261121b"></script>
+  <script src="/foodlog/assets/js/restaurant.js?v=20261121c"></script>
 </body>
 </html>

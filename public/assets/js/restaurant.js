@@ -311,6 +311,11 @@ function renderReviews() {
       const img = el('img', 'review-photo');
       img.src = `/foodlog/${rv.image}`;
       img.alt = 'Review photo';
+      img.title = 'クリックして拡大';
+      img.addEventListener('click', () => {
+        const caption = rv.order_details ? `🍽️ ${rv.order_details}` : '';
+        openPhotoLightbox(img.src, caption);
+      });
       item.appendChild(img);
     }
 
@@ -756,6 +761,42 @@ function setupReviewControls() {
   }
 }
 
+function openPhotoLightbox(src, caption = '') {
+  const modal = document.getElementById('photo-lightbox-modal');
+  const img = document.getElementById('photo-lightbox-img');
+  const cap = document.getElementById('photo-lightbox-caption');
+  if (!modal || !img) return;
+  img.src = src;
+  if (cap) {
+    cap.textContent = caption;
+    cap.style.display = caption ? '' : 'none';
+  }
+  modal.classList.add('open');
+}
+
+function closePhotoLightbox() {
+  const modal = document.getElementById('photo-lightbox-modal');
+  const img = document.getElementById('photo-lightbox-img');
+  if (modal) modal.classList.remove('open');
+  if (img) img.src = '';
+}
+
+function setupPhotoLightbox() {
+  const modal = document.getElementById('photo-lightbox-modal');
+  const closeBtn = document.getElementById('photo-lightbox-close');
+  if (closeBtn) closeBtn.addEventListener('click', closePhotoLightbox);
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closePhotoLightbox();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && modal.classList.contains('open')) {
+      closePhotoLightbox();
+    }
+  });
+}
+
 // ─── 初期化 ──────────────────────────────────────────────────────────────────
 function init() {
   setupUploadArea('edit-upload-area', 'edit-upload-placeholder', 'edit-image-preview', 'edit-image');
@@ -777,6 +818,7 @@ function init() {
   setupCharCounter('edit-rv-impression', 'edit-impression-count');
 
   setupReviewControls();
+  setupPhotoLightbox();
 
   loadRestaurant();
   loadReviews();
