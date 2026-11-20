@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Http\Request;
@@ -29,6 +30,12 @@ $registerAppRoutes = function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/logout', [AuthController::class, 'showLogout']);
+
+    // パスワードリセット
+    Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm']);
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->middleware('throttle:5,1');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm']);
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:5,1');
 
     Route::middleware('auth')->group(function () {
         Route::get('/member', [MemberController::class, 'show']);
