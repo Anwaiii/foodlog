@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Restaurant — FoodLog</title>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261120b" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261120c" />
 </head>
 <body>
 
@@ -206,6 +206,6 @@
       userId: {{ Auth::check() ? Auth::id() : 'null' }}
     };
   </script>
-  <script src="/foodlog/assets/js/restaurant.js?v=20261120b"></script>
+  <script src="/foodlog/assets/js/restaurant.js?v=20261120c"></script>
 </body>
 </html>

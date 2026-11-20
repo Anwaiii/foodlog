@@ -167,13 +167,71 @@ function renderReviews() {
   if (totalPages > 1) {
     const nav = document.createElement('div');
     nav.className = 'pagination';
+
+    let pageButtonsHtml = `<button class="pagination-num ${currentPage === 1 ? 'active' : ''}" data-page="1">1</button>`;
+    const windowSize = 9; // 1ページ目を含めて最大10個分を表示
+    let start = Math.max(2, currentPage - 4);
+    let end = Math.min(totalPages, start + windowSize - 1);
+    if (end - start + 1 < windowSize) {
+      start = Math.max(2, end - windowSize + 1);
+    }
+
+    if (start > 2) {
+      pageButtonsHtml += `<span class="pagination-ellipsis">…</span>`;
+    }
+    for (let p = start; p <= end; p++) {
+      pageButtonsHtml += `<button class="pagination-num ${currentPage === p ? 'active' : ''}" data-page="${p}">${p}</button>`;
+    }
+    if (end < totalPages) {
+      pageButtonsHtml += `<span class="pagination-ellipsis">…</span>`;
+    }
+
     nav.innerHTML = `
       <button class="pagination-btn" id="pg-prev" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>
-      <span class="pagination-info">${currentPage} / ${totalPages}</span>
-      <button class="pagination-btn" id="pg-next" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
+      <div class="pagination-numbers">${pageButtonsHtml}</div>
+      <button class="pagination-btn" id="pg-next" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>
+      <div class="pagination-jump">
+        <input type="text" inputmode="numeric" id="pg-jump-input" class="pagination-input"
+               placeholder="1-${totalPages}" aria-label="ページ番号" title="1〜${totalPages}の数字を入力してEnter" />
+        <span class="pagination-total">/ ${totalPages}</span>
+      </div>`;
     list.appendChild(nav);
+
     document.getElementById('pg-prev').addEventListener('click', () => { currentPage--; renderReviews(); });
     document.getElementById('pg-next').addEventListener('click', () => { currentPage++; renderReviews(); });
+    nav.querySelectorAll('.pagination-num').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentPage = Number(btn.dataset.page);
+        renderReviews();
+      });
+    });
+
+    const jumpInput = document.getElementById('pg-jump-input');
+    if (jumpInput) {
+      jumpInput.addEventListener('input', () => {
+        let val = jumpInput.value
+          .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+          .replace(/[^0-9]/g, '')
+          .replace(/^0+/, '');
+        if (val !== '') {
+          const num = parseInt(val, 10);
+          if (num > totalPages) {
+            val = String(totalPages);
+          }
+        }
+        jumpInput.value = val;
+      });
+      jumpInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const num = parseInt(jumpInput.value, 10);
+          if (num >= 1 && num <= totalPages) {
+            currentPage = num;
+            renderReviews();
+          }
+        }
+      });
+    }
   }
 }
 
