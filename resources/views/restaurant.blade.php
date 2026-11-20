@@ -8,20 +8,7 @@
 </head>
 <body>
 
-  <nav class="nav">
-    <a href="/foodlog/" class="nav-brand">
-      <span class="logo-icon">🍜</span>
-      <span>FoodLog</span>
-    </a>
-    <div class="nav-links">
-      <a href="/foodlog/" class="nav-link">Home</a>
-      <a href="/foodlog/stats.php" class="nav-link">Stats</a>
-      <a href="/foodlog/search.php" class="nav-link">Search</a>
-    </div>
-    <div class="nav-right">
-      <span class="badge" id="review-count-badge">0 Reviews</span>
-    </div>
-  </nav>
+  @include('partials.nav', ['active' => '', 'badgeId' => 'review-count-badge'])
 
   <div class="detail-header">
     <div class="detail-banner-placeholder" id="banner-placeholder" style="display:none;"></div>
@@ -33,69 +20,83 @@
       <h1 class="detail-name" id="detail-name">Loading…</h1>
       <p class="detail-desc" id="detail-desc"></p>
       <p class="detail-address" id="detail-address" style="font-size:0.9rem;color:var(--muted);margin-top:0.5rem;"></p>
+      @if(Auth::check() && Auth::user()->isAdmin())
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1rem;">
         <button class="edit-info-btn" id="edit-info-btn">✏️ Edit Info</button>
         <button class="edit-info-btn delete-restaurant-btn" id="delete-restaurant-btn">🗑 Delete</button>
       </div>
+      @endif
     </div>
   </div>
 
   <div class="detail-body">
-    <div class="detail-grid">
-      <aside class="review-form-card">
-        <h2>📝 Log an Order</h2>
-        <form id="review-form" enctype="multipart/form-data">
-          <div class="form-group">
-            <label for="rv-date">Date</label>
-            <input type="date" id="rv-date" name="date" required />
-          </div>
-          <div class="form-group">
-            <label for="rv-order">
-              What did you order?
-              <span class="char-count" id="order-count">0 / 200</span>
-            </label>
-            <textarea id="rv-order" name="order_details" class="order-textarea" rows="3"
-              placeholder="e.g. Tonkotsu Ramen&#10;Gyoza&#10;Karaage" maxlength="200" required></textarea>
-          </div>
-          <div class="form-group">
-            <label for="rv-impression">
-              Your Impression
-              <span class="char-count" id="impression-count">0 / 500</span>
-            </label>
-            <textarea id="rv-impression" name="impression" class="impression-textarea"
-              placeholder="How was it? Taste, delivery time, value…"
-              maxlength="500" required></textarea>
-          </div>
-          <div class="form-group">
-            <label for="rv-rating">Rating (1–5 ⭐)</label>
-            <input type="number" id="rv-rating" name="rating" min="1" max="5" placeholder="5" required />
-          </div>
-          <div class="form-group">
-            <label>Photo (optional, max 1)</label>
-            <div class="upload-area" id="rv-upload-area">
-              <div class="upload-placeholder" id="rv-upload-placeholder">
-                <span class="upload-icon">📷</span>
-                <span>Click or drag to upload photo</span>
-              </div>
-              <img id="rv-image-preview" class="upload-preview" style="display:none;" alt="Preview" />
-              <input type="file" id="rv-image" name="image" accept="image/*" style="display:none;" />
-            </div>
-          </div>
-          <button type="submit" class="btn-submit" style="width:100%;padding:0.85rem;">Save Review</button>
-        </form>
-      </aside>
-
-      <section class="reviews-panel">
-        <h2>📖 Order History</h2>
-        <div id="reviews-list">
-          <div class="reviews-empty"><div class="empty-icon">⏳</div><p>Loading…</p></div>
-        </div>
-      </section>
-    </div>
+    <section class="reviews-panel">
+      <div class="section-header" style="margin-bottom:1.2rem;">
+        <h2 style="margin-bottom:0;">📖 Reviews</h2>
+        @auth
+          <button class="add-btn" id="add-review-btn">＋ Add Review</button>
+        @endauth
+      </div>
+      <div id="reviews-list">
+        <div class="reviews-empty"><div class="empty-icon">⏳</div><p>Loading…</p></div>
+      </div>
+    </section>
   </div>
 
   <footer><p>FoodLog — Data saved in MySQL database 🗄️</p></footer>
 
+  @auth
+  <!-- Add Review Modal -->
+  <div class="modal-overlay" id="add-review-modal">
+    <div class="modal">
+      <h2>📝 Log an Order</h2>
+      <form id="review-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="rv-date">Date</label>
+          <input type="date" id="rv-date" name="date" required />
+        </div>
+        <div class="form-group">
+          <label for="rv-order">
+            What did you order?
+            <span class="char-count" id="order-count">0 / 200</span>
+          </label>
+          <textarea id="rv-order" name="order_details" class="order-textarea" rows="3"
+            placeholder="e.g. Tonkotsu Ramen&#10;Gyoza&#10;Karaage" maxlength="200" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="rv-impression">
+            Your Impression
+            <span class="char-count" id="impression-count">0 / 500</span>
+          </label>
+          <textarea id="rv-impression" name="impression" class="impression-textarea"
+            placeholder="How was it? Taste, delivery time, value…"
+            maxlength="500" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="rv-rating">Rating (1–5 ⭐)</label>
+          <input type="number" id="rv-rating" name="rating" min="1" max="5" placeholder="5" required />
+        </div>
+        <div class="form-group">
+          <label>Photo (optional, max 1)</label>
+          <div class="upload-area" id="rv-upload-area">
+            <div class="upload-placeholder" id="rv-upload-placeholder">
+              <span class="upload-icon">📷</span>
+              <span>Click or drag to upload photo</span>
+            </div>
+            <img id="rv-image-preview" class="upload-preview" style="display:none;" alt="Preview" />
+            <input type="file" id="rv-image" name="image" accept="image/*" style="display:none;" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancel-add-review-btn">Cancel</button>
+          <button type="submit" class="btn-submit">Save Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  @endauth
+
+  @if(Auth::check() && Auth::user()->isAdmin())
   <!-- Edit Restaurant Modal -->
   <div class="modal-overlay" id="edit-modal">
     <div class="modal">
@@ -147,7 +148,9 @@
       </form>
     </div>
   </div>
+  @endif
 
+  @auth
   <!-- Edit Review Modal -->
   <div class="modal-overlay" id="edit-review-modal">
     <div class="modal">
@@ -194,7 +197,15 @@
       </form>
     </div>
   </div>
+  @endauth
 
+  <script>
+    window.AUTH = {
+      loggedIn: {{ Auth::check() ? 'true' : 'false' }},
+      isAdmin: {{ Auth::check() && Auth::user()->isAdmin() ? 'true' : 'false' }},
+      userId: {{ Auth::check() ? Auth::id() : 'null' }}
+    };
+  </script>
   <script src="/foodlog/assets/js/restaurant.js"></script>
 </body>
 </html>

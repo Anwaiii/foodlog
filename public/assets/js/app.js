@@ -31,8 +31,12 @@ function renderGrid(restaurants) {
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
          <div class="card-image-placeholder" style="display:none;background:${gradient}">🍽️</div>`
       : `<div class="card-image-placeholder" style="background:${gradient}">🍽️</div>`;
+    const isAdmin = Boolean(window.AUTH && window.AUTH.isAdmin);
+    const deleteBtnHtml = isAdmin
+      ? `<button class="card-delete-btn" data-id="${r.id}" data-name="${r.name.replace(/"/g,'&quot;')}" title="Delete">🗑</button>`
+      : '';
     card.innerHTML = `${imageHtml}
-      <button class="card-delete-btn" data-id="${r.id}" data-name="${r.name.replace(/"/g,'&quot;')}" title="Delete">🗑</button>
+      ${deleteBtnHtml}
       <div class="card-body">
         <div class="card-category">${r.category || ''}</div>
         <div class="card-name">${r.name}</div>
@@ -54,7 +58,12 @@ function renderGrid(restaurants) {
       const name = btn.dataset.name;
       if (!confirm(`「${name}」を削除しますか？\nすべてのレビューも削除されます。`)) return;
       btn.textContent = '…'; btn.disabled = true;
-      await fetch(`/foodlog/api/restaurants.php?id=${btn.dataset.id}`, { method: 'DELETE' });
+      const res = await fetch(`/foodlog/api/restaurants.php?id=${btn.dataset.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        alert('削除権限がありません。');
+        btn.textContent = '🗑'; btn.disabled = false;
+        return;
+      }
       init();
     });
   });
@@ -80,6 +89,7 @@ function renderGrid(restaurants) {
 // ─── Upload area setup ────────────────────────────────────────────────────────
 function setupUploadArea(areaId, placeholderId, previewId, inputId) {
   const area = document.getElementById(areaId);
+  if (!area) return;
   const placeholder = document.getElementById(placeholderId);
   const preview = document.getElementById(previewId);
   const input = document.getElementById(inputId);
@@ -111,28 +121,41 @@ function showPreview(file, placeholder, preview) {
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 const modal = document.getElementById('add-modal');
-document.getElementById('add-restaurant-btn').addEventListener('click', () => {
-  modal.classList.add('open');
-  document.getElementById('r-name').focus();
-});
-document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
-modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+const addBtn = document.getElementById('add-restaurant-btn');
+const cancelBtn = document.getElementById('cancel-modal-btn');
+const addForm = document.getElementById('add-restaurant-form');
+
+if (modal && addBtn) {
+  addBtn.addEventListener('click', () => {
+    modal.classList.add('open');
+    document.getElementById('r-name').focus();
+  });
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+}
 
 function closeModal() {
+  if (!modal) return;
   modal.classList.remove('open');
-  document.getElementById('add-restaurant-form').reset();
+  addForm.reset();
   document.getElementById('add-image-preview').style.display = 'none';
   document.getElementById('add-upload-placeholder').style.display = 'flex';
 }
 
-document.getElementById('add-restaurant-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const res = await fetch('/foodlog/api/restaurants.php', { method: 'POST', body: formData });
-  await res.json();
-  closeModal();
-  init();
-});
+if (addForm) {
+  addForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const res = await fetch('/foodlog/api/restaurants.php', { method: 'POST', body: formData });
+    if (!res.ok) {
+      alert('追加権限がありません。');
+      return;
+    }
+    await res.json();
+    closeModal();
+    init();
+  });
+}
 
 // ─── 文字数カウンター汎用 ─────────────────────────────────────────────────────
 function setupCharCounter(inputId, counterId) {

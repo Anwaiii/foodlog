@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class ReviewController extends Controller
 {
@@ -23,16 +24,27 @@ class ReviewController extends Controller
             return response()->json(['error' => 'restaurant_id required'], 400);
         }
 
-        $reviews = Review::where('restaurant_id', $restaurantId)
+        $reviews = Review::with('member:id,nickname')
+            ->where('restaurant_id', $restaurantId)
             ->orderBy('date', 'DESC')
             ->orderBy('created_at', 'DESC')
-            ->get();
+            ->get()
+            ->map(function ($rv) {
+                $data = $rv->toArray();
+                $data['member_nickname'] = $rv->member?->nickname;
+                unset($data['member']);
+                return $data;
+            });
 
         return response()->json($reviews);
     }
 
     public function store(Request $request): JsonResponse
     {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $validated = $request->validate([
             'restaurant_id' => 'required|integer|exists:restaurants,id',
             'date'          => 'required|date|before_or_equal:today',
@@ -46,6 +58,7 @@ class ReviewController extends Controller
 
         $review = Review::create([
             'restaurant_id' => $validated['restaurant_id'],
+            'member_id'     => Auth::id(),
             'date'          => $validated['date'],
             'order_details' => $validated['order_details'],
             'impression'    => $validated['impression'],
@@ -53,14 +66,28 @@ class ReviewController extends Controller
             'image'         => $imagePath,
         ]);
 
-        return response()->json($review);
+        $review->load('member:id,nickname');
+        $data = $review->toArray();
+        $data['member_nickname'] = $review->member?->nickname;
+        unset($data['member']);
+
+        return response()->json($data);
     }
 
     public function update(Request $request, int $id): JsonResponse
     {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $review = Review::find($id);
         if (!$review) {
             return response()->json(['error' => 'Review not found'], 404);
+        }
+
+        // 投稿者本人のみ編集可（管理者でも他人のレビューは編集不可）
+        if ((int) $review->member_id !== (int) Auth::id()) {
+            return response()->json(['error' => 'Forbidden'], 403);
         }
 
         $validated = $request->validate([
@@ -92,9 +119,18 @@ class ReviewController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $review = Review::find($id);
         if (!$review) {
             return response()->json(['error' => 'Review not found'], 404);
+        }
+
+        // 投稿者本人 または 管理者のみ削除可
+        if (!Auth::user()->isAdmin() && (int) $review->member_id !== (int) Auth::id()) {
+            return response()->json(['error' => 'Forbidden'], 403);
         }
 
         $deleted = $review->delete();

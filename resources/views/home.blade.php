@@ -9,20 +9,7 @@
 </head>
 <body>
 
-  <nav class="nav">
-    <a href="/foodlog/" class="nav-brand">
-      <span class="logo-icon">🍜</span>
-      <span>FoodLog</span>
-    </a>
-    <div class="nav-links">
-      <a href="/foodlog/" class="nav-link active">Home</a>
-      <a href="/foodlog/stats.php" class="nav-link">Stats</a>
-      <a href="/foodlog/search.php" class="nav-link">Search</a>
-    </div>
-    <div class="nav-right">
-      <span class="badge" id="total-reviews-badge">0 Reviews</span>
-    </div>
-  </nav>
+  @include('partials.nav', ['active' => 'home', 'badgeId' => 'total-reviews-badge'])
 
   <section class="hero">
     <div class="hero-tag">🍴 Your Personal Food Diary</div>
@@ -47,7 +34,9 @@
   <main class="section">
     <div class="section-header">
       <div class="section-title">Restaurants <span id="restaurant-count"></span></div>
-      <button class="add-btn" id="add-restaurant-btn">＋ Add Restaurant</button>
+      @if(Auth::check() && Auth::user()->isAdmin())
+        <button class="add-btn" id="add-restaurant-btn">＋ Add Restaurant</button>
+      @endif
     </div>
     <div class="restaurant-grid" id="restaurant-grid">
       <div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>
@@ -56,6 +45,7 @@
 
   <footer><p>FoodLog — Data saved in MySQL database 🗄️</p></footer>
 
+  @if(Auth::check() && Auth::user()->isAdmin())
   <!-- Add Restaurant Modal -->
   <div class="modal-overlay" id="add-modal">
     <div class="modal">
@@ -107,7 +97,15 @@
       </form>
     </div>
   </div>
+  @endif
 
+  <script>
+    window.AUTH = {
+      loggedIn: {{ Auth::check() ? 'true' : 'false' }},
+      isAdmin: {{ Auth::check() && Auth::user()->isAdmin() ? 'true' : 'false' }},
+      userId: {{ Auth::check() ? Auth::id() : 'null' }}
+    };
+  </script>
   <script src="/foodlog/assets/js/app.js"></script>
 </body>
 </html>

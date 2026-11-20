@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\ReviewController;
@@ -21,6 +23,18 @@ $registerAppRoutes = function () {
     Route::get('/stats.php', [PageController::class, 'stats']);
     Route::get('/search', [PageController::class, 'search'])->name('search');
     Route::get('/search.php', [PageController::class, 'search']);
+
+    // 認証・会員画面
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/logout', [AuthController::class, 'showLogout']);
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/member', [MemberController::class, 'show']);
+        Route::get('/member/password', [MemberController::class, 'editPassword']);
+        Route::post('/member/password', [MemberController::class, 'updatePassword']);
+    });
 
     // API互換ルート（web経由の /foodlog/api/... リクエスト対応）
     Route::prefix('api')->group(function () {

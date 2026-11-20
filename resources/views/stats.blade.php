@@ -8,20 +8,7 @@
 </head>
 <body>
 
-  <nav class="nav">
-    <a href="/foodlog/" class="nav-brand">
-      <span class="logo-icon">🍜</span>
-      <span>FoodLog</span>
-    </a>
-    <div class="nav-links">
-      <a href="/foodlog/" class="nav-link">Home</a>
-      <a href="/foodlog/stats.php" class="nav-link active">Stats</a>
-      <a href="/foodlog/search.php" class="nav-link">Search</a>
-    </div>
-    <div class="nav-right">
-      <span class="badge" id="total-reviews-badge">0 Reviews</span>
-    </div>
-  </nav>
+  @include('partials.nav', ['active' => 'stats', 'badgeId' => 'total-reviews-badge'])
 
   <section class="stats-hero">
     <div class="hero-tag">📊 Dashboard</div>

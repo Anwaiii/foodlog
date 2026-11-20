@@ -11,7 +11,8 @@ const restaurantId = params.get('id');
 if (!restaurantId) window.location.href = '/foodlog/';
 
 const today = new Date().toISOString().split('T')[0];
-document.getElementById('rv-date').value = today;
+const rvDateInput = document.getElementById('rv-date');
+if (rvDateInput) rvDateInput.value = today;
 
 // 現在のレストランデータをキャッシュ
 let currentRestaurant = null;
@@ -89,9 +90,13 @@ function renderReviews() {
   document.getElementById('review-count-badge').textContent = total + ' Reviews';
 
   if (!total) {
-    list.innerHTML = `<div class="reviews-empty"><div class="empty-icon">📋</div><p>No orders logged yet.<br/>Use the form to add your first review!</p></div>`;
+    list.innerHTML = `<div class="reviews-empty"><div class="empty-icon">📋</div><p>No reviews yet.</p></div>`;
     return;
   }
+
+  const loggedIn = Boolean(window.AUTH && window.AUTH.loggedIn);
+  const isAdmin  = Boolean(window.AUTH && window.AUTH.isAdmin);
+  const userId   = window.AUTH ? window.AUTH.userId : null;
 
   list.innerHTML = '';
   pageReviews.forEach(rv => {
@@ -99,25 +104,39 @@ function renderReviews() {
     const formatted = new Date(rv.date + 'T00:00:00').toLocaleDateString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric'
     });
-    // HTMLエスケープ
-    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    // 改行を<br>に変換
+    const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const nl2br = s => esc(s).replace(/\n/g, '<br>');
+
+    const isOwner = loggedIn && userId !== null && rv.member_id !== null && Number(rv.member_id) === Number(userId);
+    const canEdit = isOwner;
+    const canDelete = isOwner || isAdmin;
+
+    const editBtnHtml = canEdit ? `
+      <button class="review-edit" data-id="${rv.id}"
+        data-date="${rv.date}"
+        data-order="${esc(rv.order_details)}"
+        data-impression="${esc(rv.impression)}"
+        data-rating="${rv.rating || ''}"
+        data-image="${rv.image || ''}"
+        title="Edit">✏️</button>` : '';
+    const deleteBtnHtml = canDelete ? `
+      <button class="review-delete" data-id="${rv.id}" title="Delete">🗑</button>` : '';
+
+    const authorHtml = rv.member_nickname
+      ? `<span class="review-author">👤 ${esc(rv.member_nickname)}</span>`
+      : '';
 
     const item = document.createElement('div');
     item.className = 'review-item';
     item.innerHTML = `
       <div class="review-item-header">
-        <div class="review-date">📅 ${formatted}</div>
+        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+          <div class="review-date">📅 ${formatted}</div>
+          ${authorHtml}
+        </div>
         <div style="display:flex;gap:6px;">
-          <button class="review-edit" data-id="${rv.id}"
-            data-date="${rv.date}"
-            data-order="${esc(rv.order_details)}"
-            data-impression="${esc(rv.impression)}"
-            data-rating="${rv.rating || ''}"
-            data-image="${rv.image || ''}"
-            title="Edit">✏️</button>
-          <button class="review-delete" data-id="${rv.id}" title="Delete">🗑</button>
+          ${editBtnHtml}
+          ${deleteBtnHtml}
         </div>
       </div>
       ${stars ? `<div style="font-size:0.9rem;margin-bottom:0.5rem;">${stars}</div>` : ''}
@@ -149,42 +168,78 @@ function renderReviews() {
 }
 
 async function deleteReview(id) {
-  await fetch(`/foodlog/api/reviews.php?id=${id}`, { method: 'DELETE' });
+  const res = await fetch(`/foodlog/api/reviews.php?id=${id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    alert('削除権限がありません。');
+    return;
+  }
   loadReviews();
 }
 
-// ─── レビュー投稿フォーム ─────────────────────────────────────────────────────
-document.getElementById('review-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const date       = document.getElementById('rv-date').value;
-  const order      = document.getElementById('rv-order').value.trim();
-  const impression = document.getElementById('rv-impression').value.trim();
-  if (!date || !order || !impression) return;
+// ─── レビュー投稿モーダル ─────────────────────────────────────────────────────
+const addReviewModal = document.getElementById('add-review-modal');
+const addReviewBtn   = document.getElementById('add-review-btn');
+const cancelAddReviewBtn = document.getElementById('cancel-add-review-btn');
+const reviewForm     = document.getElementById('review-form');
 
-  const btn = e.target.querySelector('button[type="submit"]');
-  btn.textContent = '保存中…'; btn.disabled = true;
+function closeAddReviewModal() {
+  if (!addReviewModal) return;
+  addReviewModal.classList.remove('open');
+  reviewForm.reset();
+  if (rvDateInput) rvDateInput.value = today;
+  const preview = document.getElementById('rv-image-preview');
+  const placeholder = document.getElementById('rv-upload-placeholder');
+  if (preview) preview.style.display = 'none';
+  if (placeholder) placeholder.style.display = 'flex';
+  setupCharCounter('rv-order', 'order-count');
+  setupCharCounter('rv-impression', 'impression-count');
+}
 
-  const formData = new FormData(e.target);
-  formData.append('restaurant_id', restaurantId);
-
-  await fetch('/foodlog/api/reviews.php', {
-    method: 'POST',
-    body: formData,
+if (addReviewModal && addReviewBtn) {
+  addReviewBtn.addEventListener('click', () => {
+    if (rvDateInput && !rvDateInput.value) rvDateInput.value = today;
+    addReviewModal.classList.add('open');
+    document.getElementById('rv-order').focus();
   });
+  if (cancelAddReviewBtn) cancelAddReviewBtn.addEventListener('click', closeAddReviewModal);
+  addReviewModal.addEventListener('click', e => { if (e.target === addReviewModal) closeAddReviewModal(); });
+}
 
-  document.getElementById('review-form').reset();
-  document.getElementById('rv-date').value = today;
-  document.getElementById('rv-image-preview').style.display = 'none';
-  document.getElementById('rv-upload-placeholder').style.display = 'flex';
-  btn.textContent = 'Save Review'; btn.disabled = false;
+if (reviewForm) {
+  reviewForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const date       = document.getElementById('rv-date').value;
+    const order      = document.getElementById('rv-order').value.trim();
+    const impression = document.getElementById('rv-impression').value.trim();
+    if (!date || !order || !impression) return;
 
-  loadReviews();
-  if (window.innerWidth < 700) document.getElementById('reviews-list').scrollIntoView({ behavior: 'smooth' });
-});
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.textContent = '保存中…'; btn.disabled = true;
+
+    const formData = new FormData(e.target);
+    formData.append('restaurant_id', restaurantId);
+
+    const res = await fetch('/foodlog/api/reviews.php', {
+      method: 'POST',
+      body: formData,
+    });
+
+    btn.textContent = 'Save Review'; btn.disabled = false;
+
+    if (!res.ok) {
+      alert('レビューの保存に失敗しました。ログイン状態を確認してください。');
+      return;
+    }
+
+    closeAddReviewModal();
+    loadReviews();
+  });
+}
 
 // ─── 画像アップロードエリア共通処理 ──────────────────────────────────────────
 function setupUploadArea(areaId, placeholderId, previewId, inputId) {
-  const area        = document.getElementById(areaId);
+  const area = document.getElementById(areaId);
+  if (!area) return;
   const placeholder = document.getElementById(placeholderId);
   const preview     = document.getElementById(previewId);
   const input       = document.getElementById(inputId);
@@ -215,86 +270,114 @@ function showImagePreview(file, placeholder, preview) {
 }
 
 // ─── レストラン削除（詳細ページ）────────────────────────────────────────────
-document.getElementById('delete-restaurant-btn').addEventListener('click', async () => {
-  const name = currentRestaurant ? currentRestaurant.name : 'このレストラン';
-  if (!confirm(`「${name}」を削除しますか？\nすべてのレビューも削除されます。`)) return;
-  const btn = document.getElementById('delete-restaurant-btn');
-  btn.textContent = '削除中…'; btn.disabled = true;
-  await fetch(`/foodlog/api/restaurants.php?id=${restaurantId}`, { method: 'DELETE' });
-  window.location.href = '/foodlog/';
-});
+const deleteRestaurantBtn = document.getElementById('delete-restaurant-btn');
+if (deleteRestaurantBtn) {
+  deleteRestaurantBtn.addEventListener('click', async () => {
+    const name = currentRestaurant ? currentRestaurant.name : 'このレストラン';
+    if (!confirm(`「${name}」を削除しますか？\nすべてのレビューも削除されます。`)) return;
+    deleteRestaurantBtn.textContent = '削除中…'; deleteRestaurantBtn.disabled = true;
+    const res = await fetch(`/foodlog/api/restaurants.php?id=${restaurantId}`, { method: 'DELETE' });
+    if (!res.ok) {
+      alert('削除権限がありません。');
+      deleteRestaurantBtn.textContent = '🗑 Delete'; deleteRestaurantBtn.disabled = false;
+      return;
+    }
+    window.location.href = '/foodlog/';
+  });
+}
 
 // ─── 編集モーダル（レストラン）────────────────────────────────────────────────
-const editModal = document.getElementById('edit-modal');
+const editModal   = document.getElementById('edit-modal');
+const editInfoBtn = document.getElementById('edit-info-btn');
+const cancelEditBtn = document.getElementById('cancel-edit-btn');
+const editRestaurantForm = document.getElementById('edit-restaurant-form');
 
-document.getElementById('edit-info-btn').addEventListener('click', () => {
-  if (!currentRestaurant) return;
+if (editModal && editInfoBtn) {
+  editInfoBtn.addEventListener('click', () => {
+    if (!currentRestaurant) return;
 
-  // 現在の値をフォームにセット
-  document.getElementById('edit-name').value     = currentRestaurant.name || '';
-  document.getElementById('edit-category').value = currentRestaurant.category || '';
-  document.getElementById('edit-desc').value     = currentRestaurant.description || '';
-  document.getElementById('edit-address').value  = currentRestaurant.address || '';
+    document.getElementById('edit-name').value     = currentRestaurant.name || '';
+    document.getElementById('edit-category').value = currentRestaurant.category || '';
+    document.getElementById('edit-desc').value     = currentRestaurant.description || '';
+    document.getElementById('edit-address').value  = currentRestaurant.address || '';
 
-  // 現在の画像をプレビューに表示
-  const preview     = document.getElementById('edit-image-preview');
-  const placeholder = document.getElementById('edit-upload-placeholder');
-  if (currentRestaurant.image) {
-    preview.src = `/foodlog/${currentRestaurant.image}`;
-    preview.style.display = 'block';
-    placeholder.style.display = 'none';
-  } else {
-    preview.style.display = 'none';
-    placeholder.style.display = 'flex';
-  }
+    setupCharCounter('edit-name', 'edit-name-count');
+    setupCharCounter('edit-category', 'edit-category-count');
+    setupCharCounter('edit-desc', 'edit-desc-count');
+    setupCharCounter('edit-address', 'edit-address-count');
 
-  editModal.classList.add('open');
-  document.getElementById('edit-name').focus();
-});
+    const preview     = document.getElementById('edit-image-preview');
+    const placeholder = document.getElementById('edit-upload-placeholder');
+    if (currentRestaurant.image) {
+      preview.src = `/foodlog/${currentRestaurant.image}`;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+    } else {
+      preview.style.display = 'none';
+      placeholder.style.display = 'flex';
+    }
 
-document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
-editModal.addEventListener('click', e => { if (e.target === editModal) closeEditModal(); });
+    editModal.classList.add('open');
+    document.getElementById('edit-name').focus();
+  });
+
+  if (cancelEditBtn) cancelEditBtn.addEventListener('click', closeEditModal);
+  editModal.addEventListener('click', e => { if (e.target === editModal) closeEditModal(); });
+}
 
 function closeEditModal() {
+  if (!editModal) return;
   editModal.classList.remove('open');
-  document.getElementById('edit-restaurant-form').reset();
+  editRestaurantForm.reset();
   document.getElementById('edit-image-preview').style.display = 'none';
   document.getElementById('edit-upload-placeholder').style.display = 'flex';
 }
 
-document.getElementById('edit-restaurant-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const btn = e.target.querySelector('button[type="submit"]');
-  btn.textContent = '保存中…'; btn.disabled = true;
+if (editRestaurantForm) {
+  editRestaurantForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.textContent = '保存中…'; btn.disabled = true;
 
-  const formData = new FormData(e.target);
-  const res = await fetch(`/foodlog/api/restaurants.php?id=${restaurantId}`, {
-    method: 'POST',
-    body: formData,
+    const formData = new FormData(e.target);
+    const res = await fetch(`/foodlog/api/restaurants.php?id=${restaurantId}`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    btn.textContent = 'Save Changes'; btn.disabled = false;
+
+    if (!res.ok) {
+      alert('更新権限がありません。');
+      return;
+    }
+
+    const updated = await res.json();
+    if (updated && updated.id) {
+      currentRestaurant = updated;
+      const idx = restaurantList.findIndex(r => String(r.id) === String(restaurantId));
+      if (idx !== -1) restaurantList[idx] = updated;
+      renderRestaurantInfo(updated);
+    }
+    closeEditModal();
   });
-  const updated = await res.json();
-
-  if (updated && updated.id) {
-    currentRestaurant = updated;
-    // restaurantListも更新
-    const idx = restaurantList.findIndex(r => String(r.id) === String(restaurantId));
-    if (idx !== -1) restaurantList[idx] = updated;
-    renderRestaurantInfo(updated);
-  }
-
-  btn.textContent = 'Save Changes'; btn.disabled = false;
-  closeEditModal();
-});
+}
 
 // ─── レビュー編集モーダル ─────────────────────────────────────────────────────
 const editReviewModal = document.getElementById('edit-review-modal');
+const cancelEditReviewBtn = document.getElementById('cancel-edit-review-btn');
+const editReviewForm = document.getElementById('edit-review-form');
 
 function openEditReviewModal(data) {
+  if (!editReviewModal) return;
   document.getElementById('edit-review-id').value         = data.id;
   document.getElementById('edit-rv-date').value           = data.date;
   document.getElementById('edit-rv-order').value          = data.order;
   document.getElementById('edit-rv-impression').value     = data.impression;
   document.getElementById('edit-rv-rating').value         = data.rating || '';
+
+  setupCharCounter('edit-rv-order', 'edit-order-count');
+  setupCharCounter('edit-rv-impression', 'edit-impression-count');
 
   const preview = document.getElementById('edit-rv-image-preview');
   const placeholder = document.getElementById('edit-rv-upload-placeholder');
@@ -312,34 +395,45 @@ function openEditReviewModal(data) {
 }
 
 function closeEditReviewModal() {
+  if (!editReviewModal) return;
   editReviewModal.classList.remove('open');
-  document.getElementById('edit-review-form').reset();
+  editReviewForm.reset();
 }
 
-document.getElementById('cancel-edit-review-btn').addEventListener('click', closeEditReviewModal);
-editReviewModal.addEventListener('click', e => { if (e.target === editReviewModal) closeEditReviewModal(); });
+if (editReviewModal) {
+  if (cancelEditReviewBtn) cancelEditReviewBtn.addEventListener('click', closeEditReviewModal);
+  editReviewModal.addEventListener('click', e => { if (e.target === editReviewModal) closeEditReviewModal(); });
+}
 
-document.getElementById('edit-review-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const id         = document.getElementById('edit-review-id').value;
-  const date       = document.getElementById('edit-rv-date').value;
-  const order      = document.getElementById('edit-rv-order').value.trim();
-  const impression = document.getElementById('edit-rv-impression').value.trim();
-  if (!date || !order || !impression) return;
+if (editReviewForm) {
+  editReviewForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const id         = document.getElementById('edit-review-id').value;
+    const date       = document.getElementById('edit-rv-date').value;
+    const order      = document.getElementById('edit-rv-order').value.trim();
+    const impression = document.getElementById('edit-rv-impression').value.trim();
+    if (!date || !order || !impression) return;
 
-  const btn = e.target.querySelector('button[type="submit"]');
-  btn.textContent = '保存中…'; btn.disabled = true;
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.textContent = '保存中…'; btn.disabled = true;
 
-  const formData = new FormData(e.target);
-  await fetch(`/foodlog/api/reviews.php?id=${id}`, {
-    method: 'POST',
-    body: formData,
+    const formData = new FormData(e.target);
+    const res = await fetch(`/foodlog/api/reviews.php?id=${id}`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    btn.textContent = 'Save Changes'; btn.disabled = false;
+
+    if (!res.ok) {
+      alert('レビューの更新権限がありません。');
+      return;
+    }
+
+    closeEditReviewModal();
+    loadReviews();
   });
-
-  btn.textContent = 'Save Changes'; btn.disabled = false;
-  closeEditReviewModal();
-  loadReviews();
-});
+}
 
 // ─── 文字数カウンター汎用 ─────────────────────────────────────────────────────
 function setupCharCounter(inputId, counterId) {
@@ -354,8 +448,11 @@ function setupCharCounter(inputId, counterId) {
     counter.className = 'char-count' +
       (ratio >= 1 ? ' at-limit' : ratio >= 0.8 ? ' near-limit' : '');
   };
-  input.addEventListener('input', update);
-  update(); // 初期表示
+  if (!input.dataset.counterBound) {
+    input.addEventListener('input', update);
+    input.dataset.counterBound = '1';
+  }
+  update();
 }
 
 // ─── 未来日を選べないようにする ──────────────────────────────────────────────
@@ -370,21 +467,17 @@ function init() {
   setupUploadArea('rv-upload-area', 'rv-upload-placeholder', 'rv-image-preview', 'rv-image');
   setupUploadArea('edit-rv-upload-area', 'edit-rv-upload-placeholder', 'edit-rv-image-preview', 'edit-rv-image');
 
-  // 未来日禁止
   setupDateMax('rv-date');
   setupDateMax('edit-rv-date');
 
-  // Log an Order フォーム
   setupCharCounter('rv-order', 'order-count');
   setupCharCounter('rv-impression', 'impression-count');
 
-  // Edit Restaurant Info モーダル
   setupCharCounter('edit-name', 'edit-name-count');
   setupCharCounter('edit-category', 'edit-category-count');
   setupCharCounter('edit-desc', 'edit-desc-count');
   setupCharCounter('edit-address', 'edit-address-count');
 
-  // Edit Review モーダル
   setupCharCounter('edit-rv-order', 'edit-order-count');
   setupCharCounter('edit-rv-impression', 'edit-impression-count');
 

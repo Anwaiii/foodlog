@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Restaurant;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class RestaurantController extends Controller
 {
@@ -14,6 +15,17 @@ class RestaurantController extends Controller
     public function __construct()
     {
         $this->uploadDir = public_path('assets/images/');
+    }
+
+    private function requireAdmin(): ?JsonResponse
+    {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        if (!Auth::user()->isAdmin()) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+        return null;
     }
 
     public function index(Request $request): JsonResponse
@@ -53,6 +65,8 @@ class RestaurantController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if ($err = $this->requireAdmin()) return $err;
+
         $validated = $request->validate([
             'name'        => 'required|string|max:50',
             'category'    => 'required|string|max:200',
@@ -76,6 +90,8 @@ class RestaurantController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
+        if ($err = $this->requireAdmin()) return $err;
+
         $restaurant = Restaurant::find($id);
         if (!$restaurant) {
             return response()->json(['error' => 'Restaurant not found'], 404);
@@ -110,6 +126,8 @@ class RestaurantController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
+        if ($err = $this->requireAdmin()) return $err;
+
         $restaurant = Restaurant::find($id);
         if (!$restaurant) {
             return response()->json(['error' => 'Restaurant not found'], 404);

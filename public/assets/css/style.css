@@ -170,6 +170,7 @@ body {
 .modal {
   background: var(--bg3); border: 1px solid var(--border);
   border-radius: 20px; padding: 2rem; width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
   animation: modal-in 0.3s ease;
 }
 @keyframes modal-in { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: none; } }
@@ -550,3 +551,98 @@ footer {
   background: rgba(255,107,53,0.15); border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ─── HAMBURGER MENU ─── */
+.hamburger-wrapper { position: relative; }
+.hamburger-btn {
+  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+  width: 38px; height: 38px; border-radius: 10px;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+  cursor: pointer; transition: background 0.2s, border-color 0.2s;
+}
+.hamburger-btn:hover, .hamburger-btn.open {
+  background: rgba(255,107,53,0.14); border-color: var(--accent);
+}
+.hamburger-btn span {
+  display: block; width: 18px; height: 2px; border-radius: 2px;
+  background: var(--text); transition: transform 0.2s, opacity 0.2s;
+}
+.hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger-btn.open span:nth-child(2) { opacity: 0; }
+.hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.hamburger-menu {
+  display: none; position: absolute; top: calc(100% + 10px); right: 0;
+  min-width: 220px; padding: 0.6rem;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+  z-index: 300;
+}
+.hamburger-menu.open { display: block; animation: modal-in 0.18s ease; }
+.menu-user-info { padding: 0.6rem 0.8rem; }
+.menu-user-name { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; }
+.menu-divider { height: 1px; background: var(--border); margin: 0.4rem 0; }
+.menu-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  width: 100%; padding: 0.65rem 0.8rem; border-radius: 9px;
+  background: none; border: none; color: var(--text);
+  font-family: inherit; font-size: 0.88rem; font-weight: 600;
+  text-decoration: none; text-align: left; cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.menu-item:hover { background: rgba(255,107,53,0.12); color: var(--accent); }
+.menu-logout { color: #fca5a5; }
+.menu-logout:hover { background: rgba(220,38,38,0.18); color: #fecaca; }
+
+.role-badge {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 700;
+}
+.role-badge.admin {
+  background: rgba(255,107,53,0.18); border: 1px solid rgba(255,107,53,0.45); color: var(--accent2);
+}
+.role-badge.general {
+  background: rgba(124,58,237,0.18); border: 1px solid rgba(124,58,237,0.45); color: #c4b5fd;
+}
+
+/* ─── AUTH & MEMBER PAGES ─── */
+.auth-container {
+  max-width: 520px; margin: 3.5rem auto; padding: 0 1.5rem;
+}
+.auth-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 2.2rem;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+}
+.auth-header { text-align: center; margin-bottom: 1.8rem; }
+.auth-header h1 { font-size: 1.65rem; font-weight: 800; margin-bottom: 0.4rem; }
+.auth-header p { color: var(--muted); font-size: 0.9rem; }
+.auth-footer { text-align: center; margin-top: 1.5rem; }
+.back-link { color: var(--muted); font-size: 0.85rem; text-decoration: none; transition: color 0.2s; }
+.back-link:hover { color: var(--accent); }
+
+.alert-error {
+  background: rgba(220,38,38,0.14); border: 1px solid rgba(220,38,38,0.4);
+  color: #fca5a5; border-radius: 10px; padding: 0.8rem 1rem;
+  font-size: 0.85rem; margin-bottom: 1.2rem;
+}
+.alert-success {
+  background: rgba(34,197,94,0.14); border: 1px solid rgba(34,197,94,0.4);
+  color: #86efac; border-radius: 10px; padding: 0.8rem 1rem;
+  font-size: 0.85rem; margin-bottom: 1.2rem;
+}
+
+.profile-list { display: flex; flex-direction: column; gap: 0.8rem; }
+.profile-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 0.75rem 1rem; border-radius: 10px;
+  background: var(--bg2); border: 1px solid var(--border);
+}
+.profile-label { font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+.profile-value { font-size: 0.92rem; font-weight: 600; color: var(--text); text-align: right; word-break: break-all; }
+
+.review-author {
+  font-size: 0.78rem; font-weight: 600; color: var(--muted);
+  background: rgba(255,255,255,0.05); padding: 3px 9px; border-radius: 6px;
+}
+
