@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>Restaurant — FoodLog</title>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261120f" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261121a" />
 </head>
 <body>
 
@@ -32,10 +32,31 @@
 
   <div class="detail-body">
     <section class="reviews-panel">
-      <div class="section-header" style="margin-bottom:1.2rem;">
-        <div style="display:flex;align-items:center;gap:0.75rem;">
+      <div class="reviews-section-header">
+        <div class="reviews-title-group">
           <h2 style="margin-bottom:0;">📖 Reviews</h2>
           <span class="badge" id="review-count-badge">0 Reviews</span>
+        </div>
+        <div class="reviews-toolbar" id="reviews-toolbar">
+          <select id="review-sort" class="review-control" aria-label="レビュー並び替え">
+            <option value="date_desc">📅 新しい順</option>
+            <option value="date_asc">📅 古い順</option>
+            <option value="rating_desc">⭐ 星が高い順</option>
+            <option value="rating_asc">⭐ 星が低い順</option>
+          </select>
+          <select id="review-rating-filter" class="review-control" aria-label="星数フィルター">
+            <option value="all">★ すべて</option>
+            <option value="5">★5 のみ</option>
+            <option value="4">★4 以上</option>
+            <option value="3">★3 以上</option>
+            <option value="2">★2 以下</option>
+          </select>
+          <button type="button" id="review-photo-only" class="review-toggle-btn" aria-pressed="false">📷 写真あり</button>
+          @auth
+            <button type="button" id="review-my-only" class="review-toggle-btn" aria-pressed="false">👤 自分のみ</button>
+          @endauth
+          <input type="search" id="review-keyword" class="review-search-input" placeholder="🔍 店内検索..." aria-label="レビューキーワード検索" />
+          <button type="button" id="review-filter-reset" class="review-reset-btn" title="条件をリセット" style="display:none;">✕</button>
         </div>
         @auth
           <button class="add-btn" id="add-review-btn">＋ Add Review</button>
@@ -210,6 +231,6 @@
       userId: {{ Auth::check() ? Auth::id() : 'null' }}
     };
   </script>
-  <script src="/foodlog/assets/js/restaurant.js?v=20261120f"></script>
+  <script src="/foodlog/assets/js/restaurant.js?v=20261121a"></script>
 </body>
 </html>

@@ -40,6 +40,13 @@ let restaurantList = [];
 const REVIEWS_PER_PAGE = 10;
 let allReviews = [];
 let currentPage = 1;
+const reviewFilters = {
+  sort: 'date_desc',
+  rating: 'all',
+  photoOnly: false,
+  myOnly: false,
+  keyword: ''
+};
 
 // ─── レストラン情報の読み込み ─────────────────────────────────────────────────
 async function loadRestaurant() {
@@ -98,21 +105,141 @@ async function loadReviews() {
   renderReviews();
 }
 
+function getAverageRating(reviews) {
+  const rated = reviews.filter(rv => Number(rv.rating) > 0);
+  if (!rated.length) return null;
+  const sum = rated.reduce((acc, rv) => acc + Number(rv.rating), 0);
+  return (sum / rated.length).toFixed(1);
+}
+
+function hasActiveReviewFilters() {
+  return reviewFilters.rating !== 'all' ||
+    reviewFilters.photoOnly ||
+    reviewFilters.myOnly ||
+    reviewFilters.keyword.trim() !== '';
+}
+
+function resetReviewFilters() {
+  reviewFilters.sort = 'date_desc';
+  reviewFilters.rating = 'all';
+  reviewFilters.photoOnly = false;
+  reviewFilters.myOnly = false;
+  reviewFilters.keyword = '';
+
+  const sortEl = document.getElementById('review-sort');
+  const ratingEl = document.getElementById('review-rating-filter');
+  const photoBtn = document.getElementById('review-photo-only');
+  const myBtn = document.getElementById('review-my-only');
+  const kwEl = document.getElementById('review-keyword');
+  if (sortEl) sortEl.value = 'date_desc';
+  if (ratingEl) ratingEl.value = 'all';
+  if (photoBtn) { photoBtn.classList.remove('active'); photoBtn.setAttribute('aria-pressed', 'false'); }
+  if (myBtn) { myBtn.classList.remove('active'); myBtn.setAttribute('aria-pressed', 'false'); }
+  if (kwEl) kwEl.value = '';
+
+  currentPage = 1;
+  renderReviews();
+}
+
+function getFilteredAndSortedReviews() {
+  const loggedIn = Boolean(window.AUTH && window.AUTH.loggedIn);
+  const userId   = window.AUTH ? window.AUTH.userId : null;
+  const kw       = reviewFilters.keyword.trim().toLowerCase();
+
+  const filtered = allReviews.filter(rv => {
+    const rating = Number(rv.rating || 0);
+    if (reviewFilters.rating === '5' && rating !== 5) return false;
+    if (reviewFilters.rating === '4' && rating < 4) return false;
+    if (reviewFilters.rating === '3' && rating < 3) return false;
+    if (reviewFilters.rating === '2' && (rating === 0 || rating > 2)) return false;
+
+    if (reviewFilters.photoOnly && !rv.image) return false;
+
+    if (reviewFilters.myOnly) {
+      if (!loggedIn || userId === null || rv.member_id === null || Number(rv.member_id) !== Number(userId)) {
+        return false;
+      }
+    }
+
+    if (kw) {
+      const hay = `${rv.order_details || ''} ${rv.impression || ''} ${rv.member_nickname || ''}`.toLowerCase();
+      if (!hay.includes(kw)) return false;
+    }
+
+    return true;
+  });
+
+  filtered.sort((a, b) => {
+    const dateA = a.date || '';
+    const dateB = b.date || '';
+    const rateA = Number(a.rating || 0);
+    const rateB = Number(b.rating || 0);
+    const idA   = Number(a.id || 0);
+    const idB   = Number(b.id || 0);
+
+    switch (reviewFilters.sort) {
+      case 'date_asc':
+        return dateA.localeCompare(dateB) || (idA - idB);
+      case 'rating_desc':
+        return (rateB - rateA) || dateB.localeCompare(dateA) || (idB - idA);
+      case 'rating_asc':
+        return (rateA - rateB) || dateB.localeCompare(dateA) || (idB - idA);
+      case 'date_desc':
+      default:
+        return dateB.localeCompare(dateA) || (idB - idA);
+    }
+  });
+
+  return filtered;
+}
+
 function renderReviews() {
   const list = document.getElementById('reviews-list');
-  const total = allReviews.length;
+  const allTotal = allReviews.length;
+  const filtered = getFilteredAndSortedReviews();
+  const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / REVIEWS_PER_PAGE));
-  const start = (currentPage - 1) * REVIEWS_PER_PAGE;
-  const pageReviews = allReviews.slice(start, start + REVIEWS_PER_PAGE);
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
 
+  const start = (currentPage - 1) * REVIEWS_PER_PAGE;
+  const pageReviews = filtered.slice(start, start + REVIEWS_PER_PAGE);
+
+  const avg = getAverageRating(allReviews);
+  const filteredActive = hasActiveReviewFilters();
   const badge = document.getElementById('review-count-badge');
-  if (badge) badge.textContent = total + ' Reviews';
+  if (badge) {
+    if (!allTotal) {
+      badge.textContent = '0 Reviews';
+    } else if (filteredActive) {
+      badge.textContent = (avg ? `★ ${avg} · ` : '') + `${total} / ${allTotal} Reviews`;
+    } else {
+      badge.textContent = (avg ? `★ ${avg} · ` : '') + `${allTotal} Reviews`;
+    }
+  }
+
+  const resetBtn = document.getElementById('review-filter-reset');
+  if (resetBtn) {
+    resetBtn.style.display = (filteredActive || reviewFilters.sort !== 'date_desc') ? '' : 'none';
+  }
 
   list.replaceChildren();
 
-  if (!total) {
+  if (!allTotal) {
     const empty = el('div', 'reviews-empty');
     empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'No reviews yet.'));
+    list.appendChild(empty);
+    return;
+  }
+
+  if (!total) {
+    const empty = el('div', 'reviews-empty');
+    empty.append(el('div', 'empty-icon', '🔍'), el('p', '', '条件に一致するレビューがありません。'));
+    const clearBtn = el('button', 'review-toggle-btn', '条件をリセット');
+    clearBtn.type = 'button';
+    clearBtn.style.marginTop = '0.75rem';
+    clearBtn.addEventListener('click', resetReviewFilters);
+    empty.appendChild(clearBtn);
     list.appendChild(empty);
     return;
   }
@@ -577,6 +704,58 @@ function setupDateMax(inputId) {
   if (input) input.setAttribute('max', today);
 }
 
+function setupReviewControls() {
+  const sortEl = document.getElementById('review-sort');
+  const ratingEl = document.getElementById('review-rating-filter');
+  const photoBtn = document.getElementById('review-photo-only');
+  const myBtn = document.getElementById('review-my-only');
+  const kwEl = document.getElementById('review-keyword');
+  const resetBtn = document.getElementById('review-filter-reset');
+
+  if (sortEl) {
+    sortEl.addEventListener('change', () => {
+      reviewFilters.sort = sortEl.value;
+      currentPage = 1;
+      renderReviews();
+    });
+  }
+  if (ratingEl) {
+    ratingEl.addEventListener('change', () => {
+      reviewFilters.rating = ratingEl.value;
+      currentPage = 1;
+      renderReviews();
+    });
+  }
+  if (photoBtn) {
+    photoBtn.addEventListener('click', () => {
+      reviewFilters.photoOnly = !reviewFilters.photoOnly;
+      photoBtn.classList.toggle('active', reviewFilters.photoOnly);
+      photoBtn.setAttribute('aria-pressed', String(reviewFilters.photoOnly));
+      currentPage = 1;
+      renderReviews();
+    });
+  }
+  if (myBtn) {
+    myBtn.addEventListener('click', () => {
+      reviewFilters.myOnly = !reviewFilters.myOnly;
+      myBtn.classList.toggle('active', reviewFilters.myOnly);
+      myBtn.setAttribute('aria-pressed', String(reviewFilters.myOnly));
+      currentPage = 1;
+      renderReviews();
+    });
+  }
+  if (kwEl) {
+    kwEl.addEventListener('input', () => {
+      reviewFilters.keyword = kwEl.value;
+      currentPage = 1;
+      renderReviews();
+    });
+  }
+  if (resetBtn) {
+    resetBtn.addEventListener('click', resetReviewFilters);
+  }
+}
+
 // ─── 初期化 ──────────────────────────────────────────────────────────────────
 function init() {
   setupUploadArea('edit-upload-area', 'edit-upload-placeholder', 'edit-image-preview', 'edit-image');
@@ -596,6 +775,8 @@ function init() {
 
   setupCharCounter('edit-rv-order', 'edit-order-count');
   setupCharCounter('edit-rv-impression', 'edit-impression-count');
+
+  setupReviewControls();
 
   loadRestaurant();
   loadReviews();
