@@ -19,7 +19,7 @@ let currentRestaurant = null;
 let restaurantList = [];
 
 // ページネーション用
-const REVIEWS_PER_PAGE = 5;
+const REVIEWS_PER_PAGE = 10;
 let allReviews = [];
 let currentPage = 1;
 
@@ -140,7 +140,7 @@ function renderReviews() {
         </div>
       </div>
       ${stars ? `<div style="font-size:0.9rem;margin-bottom:0.5rem;">${stars}</div>` : ''}
-      ${rv.image ? `<img src="/foodlog/${rv.image}" alt="Review photo" style="max-width:100%;border-radius:8px;margin-bottom:0.5rem;display:block;" />` : ''}
+      ${rv.image ? `<img src="/foodlog/${rv.image}" alt="Review photo" class="review-photo" />` : ''}
       <div class="review-order">${nl2br(rv.order_details)}</div>
       <div class="review-impression">${nl2br(rv.impression)}</div>`;
     list.appendChild(item);
