@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>Restaurant — FoodLog</title>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261121b" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261121c" />
 </head>
 <body>
 
