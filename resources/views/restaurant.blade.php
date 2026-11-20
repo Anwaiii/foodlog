@@ -231,6 +231,6 @@
       userId: {{ Auth::check() ? Auth::id() : 'null' }}
     };
   </script>
-  <script src="/foodlog/assets/js/restaurant.js?v=20261121a"></script>
+  <script src="/foodlog/assets/js/restaurant.js?v=20261121b"></script>
 </body>
 </html>

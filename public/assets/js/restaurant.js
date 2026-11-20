@@ -212,9 +212,9 @@ function renderReviews() {
     if (!allTotal) {
       badge.textContent = '0 Reviews';
     } else if (filteredActive) {
-      badge.textContent = (avg ? `★ ${avg} · ` : '') + `${total} / ${allTotal} Reviews`;
+      badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${total} / ${allTotal} Reviews`;
     } else {
-      badge.textContent = (avg ? `★ ${avg} · ` : '') + `${allTotal} Reviews`;
+      badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${allTotal} Reviews`;
     }
   }
 
