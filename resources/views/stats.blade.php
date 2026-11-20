@@ -65,6 +65,6 @@
 
   <footer><p>FoodLog — Data saved in MySQL database 🗄️</p></footer>
 
-  <script src="/foodlog/assets/js/stats.js"></script>
+  <script src="/foodlog/assets/js/stats.js?v=20261120d"></script>
 </body>
 </html>

@@ -28,7 +28,8 @@ async function loadData() {
 function renderSummary(restaurants, reviews) {
   document.getElementById('s-restaurants').textContent = restaurants.length;
   document.getElementById('s-reviews').textContent = reviews.length;
-  document.getElementById('total-reviews-badge').textContent = reviews.length + ' Reviews';
+  const totalBadge = document.getElementById('total-reviews-badge');
+  if (totalBadge) totalBadge.textContent = reviews.length + ' Reviews';
 
   // Average rating
   const rated = reviews.filter(r => r.rating);

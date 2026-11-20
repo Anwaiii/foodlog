@@ -9,9 +9,6 @@
       <a href="/foodlog/search.php" class="nav-link {{ ($active ?? '') === 'search' ? 'active' : '' }}">Search</a>
     </div>
     <div class="nav-right">
-      @if(!empty($badgeId))
-        <span class="badge" id="{{ $badgeId }}">0 Reviews</span>
-      @endif
       <div class="hamburger-wrapper" id="hamburger-wrapper">
         <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu" aria-expanded="false">
           <span></span><span></span><span></span>

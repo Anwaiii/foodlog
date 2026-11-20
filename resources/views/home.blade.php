@@ -106,6 +106,6 @@
       userId: {{ Auth::check() ? Auth::id() : 'null' }}
     };
   </script>
-  <script src="/foodlog/assets/js/app.js"></script>
+  <script src="/foodlog/assets/js/app.js?v=20261120d"></script>
 </body>
 </html>

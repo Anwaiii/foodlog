@@ -32,7 +32,10 @@
   <div class="detail-body">
     <section class="reviews-panel">
       <div class="section-header" style="margin-bottom:1.2rem;">
-        <h2 style="margin-bottom:0;">📖 Reviews</h2>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <h2 style="margin-bottom:0;">📖 Reviews</h2>
+          <span class="badge" id="review-count-badge">0 Reviews</span>
+        </div>
         @auth
           <button class="add-btn" id="add-review-btn">＋ Add Review</button>
         @endauth

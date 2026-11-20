@@ -70,7 +70,8 @@ function renderGrid(restaurants) {
 
   document.getElementById('stat-restaurants').textContent = restaurants.length;
   document.getElementById('stat-reviews').textContent = totalReviews;
-  document.getElementById('total-reviews-badge').textContent = totalReviews + ' Reviews';
+  const totalBadge = document.getElementById('total-reviews-badge');
+  if (totalBadge) totalBadge.textContent = totalReviews + ' Reviews';
   document.getElementById('restaurant-count').textContent = '(' + restaurants.length + ')';
 
   // 最新注文日を表示

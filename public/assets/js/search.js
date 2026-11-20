@@ -29,7 +29,8 @@ async function loadData() {
 
   // 総レビュー数
   const totalReviews = Object.values(allReviews).reduce((s, arr) => s + arr.length, 0);
-  document.getElementById('total-reviews-badge').textContent = totalReviews + ' Reviews';
+  const totalBadge = document.getElementById('total-reviews-badge');
+  if (totalBadge) totalBadge.textContent = totalReviews + ' Reviews';
 
   // カテゴリチップを動的生成
   buildCategoryChips();
