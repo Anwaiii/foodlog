@@ -1,4 +1,4 @@
-  <nav class="nav">
+﻿  <nav class="nav">
     <a href="/foodlog/" class="nav-brand">
       <span class="logo-icon">🍜</span>
       <span>FoodLog</span>
@@ -9,6 +9,17 @@
       <a href="/foodlog/search.php" class="nav-link {{ ($active ?? '') === 'search' ? 'active' : '' }}">Search</a>
     </div>
     <div class="nav-right">
+      @auth
+        <a href="/foodlog/member" class="nav-user-pill" title="会員情報の確認">
+          <span>{{ Auth::user()->isAdmin() ? '👑' : '👤' }}</span>
+          <span>{{ Auth::user()->nickname }}</span>
+        </a>
+      @else
+        <a href="/foodlog/login" class="nav-user-pill guest" title="ログイン画面へ">
+          <span>👤</span>
+          <span>ゲスト</span>
+        </a>
+      @endauth
       <div class="hamburger-wrapper" id="hamburger-wrapper">
         <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu" aria-expanded="false">
           <span></span><span></span><span></span>

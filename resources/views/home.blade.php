@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FoodLog — Uber Eats Review Tracker</title>
   <meta name="description" content="Track and review your Uber Eats orders." />
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261120e" />
 </head>
 <body>
 
