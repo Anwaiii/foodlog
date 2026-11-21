@@ -1,17 +1,17 @@
 @extends('layouts.app', ['navActive' => 'favorites'])
-@section('title', 'お気に入り一覧 — FoodLog')
+@section('title', __('お気に入り一覧 — FoodLog'))
 
 @section('content')
   <section class="stats-hero">
-    <div class="hero-tag">❤️ お気に入り</div>
-    <h1>お気に入り <span class="grad">レストラン一覧</span></h1>
-    <p>保存したお気に入りレストランをいつでも見返せます。</p>
+    <div class="hero-tag">{{ __('❤️ お気に入り') }}</div>
+    <h1>{{ __('お気に入り') }} <span class="grad">{{ __('レストラン一覧') }}</span></h1>
+    <p>{{ __('保存したお気に入りレストランをいつでも見返せます。') }}</p>
   </section>
 
   <main class="section">
     <div class="section-header">
-      <div class="section-title">お気に入り店舗 <span id="favorites-count"></span></div>
-      <a href="/foodlog/" class="back-btn">← ホームへ戻る</a>
+      <div class="section-title">{{ __('お気に入り店舗') }} <span id="favorites-count"></span></div>
+      <a href="/foodlog/" class="back-btn">{{ __('← ホームへ戻る') }}</a>
     </div>
     <div class="restaurant-grid" id="favorites-grid"></div>
     <div id="favorites-pagination"></div>
@@ -19,7 +19,7 @@
 @endsection
 
 @section('scripts')
-  <script src="/foodlog/assets/js/pagination.js?v=20261122b"></script>
+  <script src="/foodlog/assets/js/pagination.js?v=20261122c"></script>
   <script>
     (function () {
       const GRADIENTS = [
@@ -50,12 +50,12 @@
         const countEl = document.getElementById('favorites-count');
         grid.replaceChildren();
         if (pg) pg.replaceChildren();
-        if (countEl) countEl.textContent = `(${items.length}件)`;
+        if (countEl) countEl.textContent = window.LOCALE === 'en' ? `(${items.length})` : `(${items.length}件)`;
 
         if (!items.length) {
           const empty = el('div', 'empty-state');
-          const p = el('p', '', 'まだお気に入り登録されたレストランがありません。');
-          const backLink = el('a', 'add-btn', 'ホームでレストランを探す');
+          const p = el('p', '', window.t('まだお気に入り登録されたレストランがありません。'));
+          const backLink = el('a', 'add-btn', window.t('ホームでレストランを探す'));
           backLink.href = '/foodlog/';
           backLink.style.cssText = 'display:inline-flex;margin-top:1rem;text-decoration:none;';
           empty.append(el('div', 'empty-icon', '🤍'), p, backLink);
@@ -70,15 +70,15 @@
 
         pageItems.forEach((r, idx) => {
           const count = parseInt(r.review_count) || 0;
-          const avgText = r.avg_rating > 0 ? `★ ${Number(r.avg_rating).toFixed(1)}` : '評価なし';
+          const avgText = r.avg_rating > 0 ? `★ ${Number(r.avg_rating).toFixed(1)}` : window.t('評価なし');
 
           const card = el('a', 'restaurant-card');
           card.href = `/foodlog/restaurant.php?id=${encodeURIComponent(r.id)}`;
 
           const favBtn = el('button', 'card-fav-btn favorited', '❤️');
           favBtn.type = 'button';
-          favBtn.title = 'お気に入り解除';
-          favBtn.setAttribute('aria-label', 'お気に入り解除');
+          favBtn.title = window.t('お気に入り解除');
+          favBtn.setAttribute('aria-label', favBtn.title);
           favBtn.addEventListener('click', async e => {
             e.preventDefault();
             e.stopPropagation();
@@ -125,7 +125,7 @@
 
           const footer = el('div', 'card-footer');
           const reviewCountEl = el('div', 'review-count');
-          reviewCountEl.append(el('strong', '', String(count)), document.createTextNode(`件のレビュー  ·  ${avgText}`));
+          reviewCountEl.append(el('strong', '', String(count)), document.createTextNode(`${window.t('件のレビュー')}  ·  ${avgText}`));
           footer.append(reviewCountEl, el('div', 'card-arrow', '→'));
           body.appendChild(footer);
 

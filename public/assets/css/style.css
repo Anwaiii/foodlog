@@ -965,7 +965,26 @@ footer {
   word-break: break-word;
 }
 
-/* THEME TOGGLE */
+/* THEME & LANG TOGGLE */
+.lang-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.2s, background 0.2s;
+}
+.lang-toggle-btn:hover {
+  border-color: var(--accent);
+  background: rgba(255,107,53,0.12);
+}
 .theme-toggle-btn {
   width: 36px;
   height: 36px;

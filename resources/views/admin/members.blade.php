@@ -1,23 +1,23 @@
 @extends('layouts.app')
-@section('title', '会員管理（管理者） — FoodLog')
+@section('title', __('会員管理（管理者） — FoodLog'))
 
 @section('content')
   <section class="stats-hero">
-    <div class="hero-tag">🛠️ Admin Dashboard</div>
-    <h1>会員管理 <span class="grad">一覧</span></h1>
-    <p>登録会員のステータス確認およびアカウント有効／停止の切り替えができます。</p>
+    <div class="hero-tag">🛠️ {{ __('管理者') }}</div>
+    <h1>{{ __('会員管理') }} <span class="grad">{{ __('一覧') }}</span></h1>
+    <p>{{ __('登録会員のステータス確認およびアカウント有効／停止の切り替えができます。') }}</p>
     <div class="hero-stats" style="margin-top:1.5rem;">
       <div>
         <div class="stat-val">{{ $totalCount }}</div>
-        <div class="stat-label">総会員数</div>
+        <div class="stat-label">{{ __('総会員数') }}</div>
       </div>
       <div>
         <div class="stat-val">{{ $activeCount }}</div>
-        <div class="stat-label">有効会員</div>
+        <div class="stat-label">{{ __('有効会員') }}</div>
       </div>
       <div>
         <div class="stat-val">{{ $disabledCount }}</div>
-        <div class="stat-label">停止中</div>
+        <div class="stat-label">{{ __('停止中') }}</div>
       </div>
     </div>
   </section>
@@ -35,22 +35,22 @@
     @endif
 
     <div class="section-header">
-      <div class="section-title">登録会員一覧（{{ $totalCount }}名）</div>
-      <a href="/foodlog/" class="back-btn">← ホームへ戻る</a>
+      <div class="section-title">{{ __('登録会員一覧') }}（{{ $totalCount }}）</div>
+      <a href="/foodlog/" class="back-btn">{{ __('← ホームへ戻る') }}</a>
     </div>
 
     <div class="admin-table-wrap">
       <table class="admin-table">
         <thead>
           <tr>
-            <th>会員ID</th>
-            <th>ニックネーム</th>
-            <th>名前（カナ）</th>
-            <th>メールアドレス</th>
-            <th>種別</th>
-            <th>レビュー数</th>
-            <th>状態</th>
-            <th>操作</th>
+            <th>{{ __('会員ID') }}</th>
+            <th>{{ __('ニックネーム') }}</th>
+            <th>{{ __('名前（カナ）') }}</th>
+            <th>{{ __('メールアドレス') }}</th>
+            <th>{{ __('種別') }}</th>
+            <th>{{ __('レビュー数') }}</th>
+            <th>{{ __('状態') }}</th>
+            <th>{{ __('操作') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -70,28 +70,28 @@
               <td>{{ $m->email }}</td>
               <td>
                 @if($m->isAdmin())
-                  <span class="role-badge admin">👑 管理者</span>
+                  <span class="role-badge admin">👑 {{ __('管理者') }}</span>
                 @else
-                  <span class="role-badge general">一般会員</span>
+                  <span class="role-badge general">{{ __('一般会員') }}</span>
                 @endif
               </td>
-              <td>{{ $m->reviews_count }}件</td>
+              <td>{{ $m->reviews_count }}</td>
               <td>
                 @if($m->delete_flg)
-                  <span class="status-badge disabled">停止中</span>
+                  <span class="status-badge disabled">{{ __('停止中') }}</span>
                 @else
-                  <span class="status-badge active">有効</span>
+                  <span class="status-badge active">{{ __('有効') }}</span>
                 @endif
               </td>
               <td>
                 @if($m->id === Auth::id())
-                  <span style="font-size:0.78rem;color:var(--muted);">ログイン中</span>
+                  <span style="font-size:0.78rem;color:var(--muted);">{{ __('ログイン中') }}</span>
                 @else
                   <form method="POST" action="/foodlog/admin/members/{{ $m->id }}/toggle-status" style="margin:0;">
                     @csrf
                     <button type="submit" class="admin-action-btn {{ $m->delete_flg ? '' : 'danger' }}"
-                            onclick="return confirm('会員「{{ $m->nickname }}」を{{ $m->delete_flg ? '有効化' : '停止' }}しますか？');">
-                      {{ $m->delete_flg ? '✅ 有効化' : '⛔ 停止' }}
+                            onclick="return confirm('{{ $m->nickname }} ({{ $m->member_id }})?');">
+                      {{ $m->delete_flg ? __('✅ 有効化') : __('⛔ 停止') }}
                     </button>
                   </form>
                 @endif

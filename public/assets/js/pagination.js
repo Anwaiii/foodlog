@@ -17,9 +17,12 @@
     const { currentPage, totalPages, onPageChange } = opts;
     if (totalPages <= 1 || typeof onPageChange !== 'function') return;
 
+    const t = k => (typeof global.t === 'function' ? global.t(k) : k);
+    const isEn = global.LOCALE === 'en';
+
     const nav = pgEl('div', 'pagination');
 
-    const prevBtn = pgEl('button', 'pagination-btn', '← 前へ');
+    const prevBtn = pgEl('button', 'pagination-btn', t('← 前へ'));
     prevBtn.id = 'pg-prev';
     prevBtn.type = 'button';
     prevBtn.disabled = currentPage === 1;
@@ -45,7 +48,7 @@
     for (let p = pStart; p <= pEnd; p++) appendPageNum(p);
     if (pEnd < totalPages) numbersWrap.appendChild(pgEl('span', 'pagination-ellipsis', '…'));
 
-    const nextBtn = pgEl('button', 'pagination-btn', '次へ →');
+    const nextBtn = pgEl('button', 'pagination-btn', t('次へ →'));
     nextBtn.id = 'pg-next';
     nextBtn.type = 'button';
     nextBtn.disabled = currentPage === totalPages;
@@ -57,8 +60,8 @@
     jumpInput.inputMode = 'numeric';
     jumpInput.id = 'pg-jump-input';
     jumpInput.placeholder = `1-${totalPages}`;
-    jumpInput.setAttribute('aria-label', 'ページ番号');
-    jumpInput.title = `1〜${totalPages}の数字を入力してEnter`;
+    jumpInput.setAttribute('aria-label', t('ページ番号'));
+    jumpInput.title = isEn ? `Enter 1-${totalPages} and press Enter` : `1〜${totalPages}の数字を入力してEnter`;
 
     jumpInput.addEventListener('input', () => {
       let val = jumpInput.value

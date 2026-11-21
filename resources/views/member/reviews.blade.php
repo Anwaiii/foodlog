@@ -1,26 +1,26 @@
 @extends('layouts.app')
-@section('title', $nickname . ' のレビュー履歴 — FoodLog')
+@section('title', $nickname . __('のレビュー履歴') . ' — FoodLog')
 
 @section('content')
   <section class="stats-hero">
-    <div class="hero-tag">{{ $isAdmin ? '👑 管理者' : '👤 会員' }} レビュー履歴</div>
-    <h1>{{ $nickname }} <span class="grad">のレビュー履歴</span></h1>
+    <div class="hero-tag">{{ $isAdmin ? '👑 ' . __('管理者') : '👤 ' . __('一般会員') }}</div>
+    <h1>{{ $nickname }}<span class="grad">{{ __('のレビュー履歴') }}</span></h1>
     <div class="hero-stats" style="margin-top:1.5rem;">
       <div>
         <div class="stat-val">{{ $totalReviews }}</div>
-        <div class="stat-label">総レビュー数</div>
+        <div class="stat-label">{{ __('総レビュー数') }}</div>
       </div>
       <div>
         <div class="stat-val">{{ $restaurantCount }}</div>
-        <div class="stat-label">訪問店舗数</div>
+        <div class="stat-label">{{ __('訪問店舗数') }}</div>
       </div>
       <div>
         <div class="stat-val">{{ $avgRating !== null ? '★ ' . number_format($avgRating, 1) : '—' }}</div>
-        <div class="stat-label">平均評価</div>
+        <div class="stat-label">{{ __('平均評価') }}</div>
       </div>
     </div>
     <div style="margin-top:1.4rem;">
-      <a href="/foodlog/" class="back-btn">← ホームへ戻る</a>
+      <a href="/foodlog/" class="back-btn">{{ __('← ホームへ戻る') }}</a>
     </div>
   </section>
 
@@ -28,23 +28,23 @@
     <section class="reviews-panel">
       <div class="reviews-section-header">
         <div class="reviews-title-group">
-          <h2 style="margin-bottom:0;">📖 投稿レビュー一覧</h2>
+          <h2 style="margin-bottom:0;">{{ __('📖 投稿レビュー一覧') }}</h2>
           <span class="badge" id="user-review-badge">
             @if($totalReviews > 0 && $avgRating !== null)
-              ★ {{ number_format($avgRating, 1) }}&nbsp;&nbsp;&nbsp;&nbsp;{{ $totalReviews }}件
+              ★ {{ number_format($avgRating, 1) }}&nbsp;&nbsp;&nbsp;&nbsp;{{ $totalReviews }}{{ app()->getLocale() === 'en' ? ' Reviews' : '件' }}
             @else
-              {{ $totalReviews }}件
+              {{ $totalReviews }}{{ app()->getLocale() === 'en' ? ' Reviews' : '件' }}
             @endif
           </span>
         </div>
         <div class="reviews-toolbar">
-          <select id="user-review-sort" class="review-control" aria-label="並び替え">
-            <option value="date_desc">📅 新しい順</option>
-            <option value="date_asc">📅 古い順</option>
-            <option value="rating_desc">⭐ 星が高い順</option>
-            <option value="rating_asc">⭐ 星が低い順</option>
+          <select id="user-review-sort" class="review-control" aria-label="{{ __('並び替え') }}">
+            <option value="date_desc">{{ __('📅 新しい順') }}</option>
+            <option value="date_asc">{{ __('📅 古い順') }}</option>
+            <option value="rating_desc">{{ __('⭐ 星が高い順') }}</option>
+            <option value="rating_asc">{{ __('⭐ 星が低い順') }}</option>
           </select>
-          <input type="search" id="user-review-keyword" class="review-search-input" placeholder="🔍 店舗・感想を検索..." aria-label="キーワード検索" />
+          <input type="search" id="user-review-keyword" class="review-search-input" placeholder="{{ __('🔍 店舗・感想を検索...') }}" aria-label="{{ __('🔍 店舗・感想を検索...') }}" />
         </div>
       </div>
       <div id="user-reviews-list"></div>
@@ -53,18 +53,17 @@
 @endsection
 
 @section('modals')
-  <!-- Photo Lightbox Modal -->
   <div class="modal-overlay" id="photo-lightbox-modal">
     <div class="photo-lightbox-box">
-      <button type="button" class="photo-lightbox-close" id="photo-lightbox-close" aria-label="閉じる">✕</button>
-      <img id="photo-lightbox-img" class="photo-lightbox-img" src="" alt="拡大レビュー写真" />
+      <button type="button" class="photo-lightbox-close" id="photo-lightbox-close" aria-label="Close">✕</button>
+      <img id="photo-lightbox-img" class="photo-lightbox-img" src="" alt="Enlarged review photo" />
       <p id="photo-lightbox-caption" class="photo-lightbox-caption"></p>
     </div>
   </div>
 @endsection
 
 @section('scripts')
-  <script src="/foodlog/assets/js/pagination.js?v=20261122b"></script>
+  <script src="/foodlog/assets/js/pagination.js?v=20261122c"></script>
   <script>
     (function () {
       const allReviews = @json($reviewsPayload);
@@ -148,13 +147,14 @@
         const badge = document.getElementById('user-review-badge');
         const rated = allReviews.filter(r => Number(r.rating) > 0);
         const avg = rated.length ? (rated.reduce((s, r) => s + Number(r.rating), 0) / rated.length).toFixed(1) : null;
+        const unit = window.LOCALE === 'en' ? ' Reviews' : '件';
         if (badge) {
           if (!allReviews.length) {
-            badge.textContent = '0件';
+            badge.textContent = '0' + unit;
           } else if (currentKeyword) {
-            badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${reviews.length} / ${allReviews.length}件`;
+            badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${reviews.length} / ${allReviews.length}${unit}`;
           } else {
-            badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${allReviews.length}件`;
+            badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${allReviews.length}${unit}`;
           }
         }
 
@@ -162,14 +162,14 @@
 
         if (!allReviews.length) {
           const empty = el('div', 'reviews-empty');
-          empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'まだ投稿されたレビューはありません。'));
+          empty.append(el('div', 'empty-icon', '📋'), el('p', '', window.t('まだ投稿されたレビューはありません。')));
           list.appendChild(empty);
           return;
         }
 
         if (!reviews.length) {
           const empty = el('div', 'reviews-empty');
-          empty.append(el('div', 'empty-icon', '🔍'), el('p', '', '条件に一致するレビューがありません。'));
+          empty.append(el('div', 'empty-icon', '🔍'), el('p', '', window.t('条件に一致するレビューがありません。')));
           list.appendChild(empty);
           return;
         }
@@ -212,8 +212,8 @@
           if (rv.image) {
             const img = el('img', 'review-photo');
             img.src = `/foodlog/${rv.image}`;
-            img.alt = 'レビュー写真';
-            img.title = 'クリックして拡大';
+            img.alt = 'Review photo';
+            img.title = window.t('クリックして拡大');
             img.addEventListener('click', () => {
               openLightbox(img.src, rv.order_details ? `🍽️ ${rv.order_details}` : '');
             });

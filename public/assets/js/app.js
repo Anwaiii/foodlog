@@ -17,6 +17,14 @@ const homeFilters = {
   favOnly: false,
 };
 
+function t(k) {
+  return typeof window.t === 'function' ? window.t(k) : k;
+}
+
+function isEn() {
+  return window.LOCALE === 'en';
+}
+
 function csrfHeaders() {
   const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   return { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' };
@@ -54,7 +62,7 @@ function updateHeroStats(restaurants) {
   const totalBadge = document.getElementById('total-reviews-badge');
   if (statRest) statRest.textContent = restaurants.length;
   if (statRev) statRev.textContent = totalReviews;
-  if (totalBadge) totalBadge.textContent = totalReviews + ' Reviews';
+  if (totalBadge) totalBadge.textContent = isEn() ? `${totalReviews} Reviews` : `${totalReviews}件`;
 
   const dates = restaurants.map(r => r.latest_date).filter(Boolean).sort().reverse();
   const statLatest = document.getElementById('stat-latest');
@@ -76,7 +84,7 @@ function buildCategoryChips(restaurants) {
   if (!container) return;
   container.replaceChildren();
 
-  const allBtn = el('button', `filter-chip ${homeFilters.category === 'all' ? 'active' : ''}`.trim(), 'すべて');
+  const allBtn = el('button', `filter-chip ${homeFilters.category === 'all' ? 'active' : ''}`.trim(), t('すべて'));
   allBtn.type = 'button';
   allBtn.dataset.category = 'all';
   container.appendChild(allBtn);
@@ -183,14 +191,20 @@ function renderGrid(restaurants) {
   const countEl = document.getElementById('restaurant-count');
   const isFiltered = homeFilters.query || homeFilters.category !== 'all' || homeFilters.minRating > 0 || homeFilters.favOnly;
   if (countEl) {
-    countEl.textContent = isFiltered
-      ? `(${restaurants.length} / ${allRestaurants.length}件)`
-      : `(${restaurants.length}件)`;
+    if (isEn()) {
+      countEl.textContent = isFiltered
+        ? `(${restaurants.length} / ${allRestaurants.length})`
+        : `(${restaurants.length})`;
+    } else {
+      countEl.textContent = isFiltered
+        ? `(${restaurants.length} / ${allRestaurants.length}件)`
+        : `(${restaurants.length}件)`;
+    }
   }
 
   if (!allRestaurants.length) {
     const empty = el('div', 'empty-state');
-    empty.append(el('div', 'empty-icon', '🍽️'), el('p', '', 'まだレストランが登録されていません。'));
+    empty.append(el('div', 'empty-icon', '🍽️'), el('p', '', t('まだレストランが登録されていません。')));
     grid.appendChild(empty);
     return;
   }
@@ -198,8 +212,8 @@ function renderGrid(restaurants) {
   if (!restaurants.length) {
     const empty = el('div', 'empty-state');
     const p = el('p');
-    p.append(document.createTextNode('条件に一致するレストランがありません。'), el('br'), document.createTextNode('別のキーワードや条件をお試しください。'));
-    const resetBtn = el('button', 'filter-chip', '条件をリセット');
+    p.append(document.createTextNode(t('条件に一致するレストランがありません。')), el('br'), document.createTextNode(t('別のキーワードや条件をお試しください。')));
+    const resetBtn = el('button', 'filter-chip', t('条件をリセット'));
     resetBtn.type = 'button';
     resetBtn.style.marginTop = '0.9rem';
     resetBtn.addEventListener('click', resetHomeFilters);
@@ -219,20 +233,20 @@ function renderGrid(restaurants) {
 
   pageRestaurants.forEach((r, idx) => {
     const count = parseInt(r.reviewCount ?? r.review_count) || 0;
-    const avgText = r.avgRating > 0 ? `★ ${r.avgRating.toFixed(1)}` : '評価なし';
+    const avgText = r.avgRating > 0 ? `★ ${r.avgRating.toFixed(1)}` : t('評価なし');
 
     const card = el('a', 'restaurant-card');
     card.href = `/foodlog/restaurant.php?id=${encodeURIComponent(r.id)}`;
 
     const favBtn = el('button', `card-fav-btn ${r.is_favorited ? 'favorited' : ''}`.trim(), r.is_favorited ? '❤️' : '🤍');
     favBtn.type = 'button';
-    favBtn.title = loggedIn ? (r.is_favorited ? 'お気に入り解除' : 'お気に入り登録') : 'ログインしてお気に入り登録';
+    favBtn.title = loggedIn ? (r.is_favorited ? t('お気に入り解除') : t('お気に入り登録')) : t('ログインしてお気に入り登録');
     favBtn.setAttribute('aria-label', favBtn.title);
     favBtn.addEventListener('click', async e => {
       e.preventDefault();
       e.stopPropagation();
       if (!loggedIn) {
-        if (confirm('お気に入り登録にはログインが必要です。ログイン画面へ移動しますか？')) {
+        if (confirm(t('お気に入り登録にはログインが必要です。ログイン画面へ移動しますか？'))) {
           location.href = '/foodlog/login';
         }
         return;
@@ -276,11 +290,14 @@ function renderGrid(restaurants) {
     if (isAdmin) {
       const delBtn = el('button', 'card-delete-btn', '🗑');
       delBtn.type = 'button';
-      delBtn.title = 'Delete';
+      delBtn.title = t('削除');
       delBtn.addEventListener('click', async e => {
         e.preventDefault();
         e.stopPropagation();
-        if (!confirm(`「${r.name}」を削除しますか？\nすべてのレビューも削除されます。`)) return;
+        const delMsg = isEn()
+          ? `Delete "${r.name}"?\nAll reviews for this restaurant will also be deleted.`
+          : `「${r.name}」を削除しますか？\nすべてのレビューも削除されます。`;
+        if (!confirm(delMsg)) return;
         delBtn.textContent = '…';
         delBtn.disabled = true;
         const res = await fetch(`/foodlog/api/restaurants.php?id=${encodeURIComponent(r.id)}`, {
@@ -288,7 +305,7 @@ function renderGrid(restaurants) {
           headers: csrfHeaders(),
         });
         if (!res.ok) {
-          alert('削除権限がありません。');
+          alert(t('削除権限がありません。'));
           delBtn.textContent = '🗑';
           delBtn.disabled = false;
           return;
@@ -316,7 +333,10 @@ function renderGrid(restaurants) {
     const footer = el('div', 'card-footer');
     const reviewCountEl = el('div', 'review-count');
     const strong = el('strong', '', String(count));
-    reviewCountEl.append(strong, document.createTextNode(`件のレビュー  ·  ${avgText}`));
+    const reviewUnit = isEn()
+      ? ` ${count === 1 ? 'review' : 'reviews'}  ·  ${avgText}`
+      : `件のレビュー  ·  ${avgText}`;
+    reviewCountEl.append(strong, document.createTextNode(reviewUnit));
     footer.append(reviewCountEl, el('div', 'card-arrow', '→'));
     body.appendChild(footer);
 
@@ -470,7 +490,7 @@ if (addForm) {
       body: formData,
     });
     if (!res.ok) {
-      alert('追加権限がありません。');
+      alert(t('追加権限がありません。'));
       return;
     }
     await res.json();

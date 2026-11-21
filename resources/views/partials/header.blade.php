@@ -4,27 +4,32 @@
       <span>FoodLog</span>
     </a>
     <div class="nav-links">
-      <a href="/foodlog/" class="nav-link {{ ($active ?? '') === 'home' ? 'active' : '' }}">ホーム</a>
+      <a href="/foodlog/" class="nav-link {{ ($active ?? '') === 'home' ? 'active' : '' }}">{{ __('ホーム') }}</a>
       @auth
-        <a href="/foodlog/favorites" class="nav-link {{ ($active ?? '') === 'favorites' ? 'active' : '' }}">❤️ お気に入り</a>
+        <a href="/foodlog/favorites" class="nav-link {{ ($active ?? '') === 'favorites' ? 'active' : '' }}">{{ __('❤️ お気に入り') }}</a>
       @endauth
-      <a href="/foodlog/stats.php" class="nav-link {{ ($active ?? '') === 'stats' ? 'active' : '' }}">統計</a>
+      <a href="/foodlog/stats.php" class="nav-link {{ ($active ?? '') === 'stats' ? 'active' : '' }}">{{ __('統計') }}</a>
     </div>
     <div class="nav-right">
-      <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" title="ライト / ダークモード切替" aria-label="テーマ切替">🌙</button>
+      <a href="/foodlog/locale/{{ app()->getLocale() === 'en' ? 'ja' : 'en' }}"
+         class="lang-toggle-btn"
+         title="{{ app()->getLocale() === 'en' ? '日本語に切替' : 'Switch to English' }}">
+        🌐 {{ app()->getLocale() === 'en' ? 'JP' : 'EN' }}
+      </a>
+      <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" title="{{ __('ライト / ダークモード切替') }}" aria-label="{{ __('テーマ切替') }}">🌙</button>
       @auth
-        <a href="/foodlog/member" class="nav-user-pill" title="会員情報の確認">
+        <a href="/foodlog/member" class="nav-user-pill" title="{{ __('会員情報の確認') }}">
           <span>{{ Auth::user()->isAdmin() ? '👑' : '👤' }}</span>
           <span>{{ Auth::user()->nickname }}</span>
         </a>
       @else
-        <a href="/foodlog/login" class="nav-user-pill guest" title="ログイン画面へ">
+        <a href="/foodlog/login" class="nav-user-pill guest" title="{{ __('ログイン') }}">
           <span>👤</span>
-          <span>ゲスト</span>
+          <span>{{ __('ゲスト') }}</span>
         </a>
       @endauth
       <div class="hamburger-wrapper" id="hamburger-wrapper">
-        <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="メニュー" aria-expanded="false">
+        <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="{{ __('メニュー') }}" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
         <div class="hamburger-menu" id="hamburger-menu">
@@ -33,27 +38,27 @@
               <div class="menu-user-name">{{ Auth::user()->nickname }}</div>
               <div class="menu-user-role">
                 @if(Auth::user()->isAdmin())
-                  <span class="role-badge admin">👑 管理者</span>
+                  <span class="role-badge admin">👑 {{ __('管理者') }}</span>
                 @else
-                  <span class="role-badge general">一般会員</span>
+                  <span class="role-badge general">{{ __('一般会員') }}</span>
                 @endif
               </div>
             </div>
             <div class="menu-divider"></div>
-            <a href="/foodlog/member" class="menu-item">👤 会員情報の確認</a>
-            <a href="/foodlog/favorites" class="menu-item">❤️ お気に入り一覧</a>
-            <a href="/foodlog/users/{{ Auth::id() }}" class="menu-item">📖 自分のレビュー履歴</a>
+            <a href="/foodlog/member" class="menu-item">{{ __('👤 会員情報の確認') }}</a>
+            <a href="/foodlog/favorites" class="menu-item">{{ __('❤️ お気に入り一覧') }}</a>
+            <a href="/foodlog/users/{{ Auth::id() }}" class="menu-item">{{ __('📖 自分のレビュー履歴') }}</a>
             @if(Auth::user()->isAdmin())
-              <a href="/foodlog/admin/members" class="menu-item">🛠️ 会員管理（管理者）</a>
+              <a href="/foodlog/admin/members" class="menu-item">{{ __('🛠️ 会員管理（管理者）') }}</a>
             @endif
             <div class="menu-divider"></div>
             <form method="POST" action="/foodlog/logout" style="margin:0;">
               @csrf
-              <button type="submit" class="menu-item menu-logout">🚪 ログアウト</button>
+              <button type="submit" class="menu-item menu-logout">{{ __('🚪 ログアウト') }}</button>
             </form>
           @else
-            <a href="/foodlog/login" class="menu-item">🔑 ログイン</a>
-            <a href="/foodlog/register" class="menu-item">✨ 新規会員登録</a>
+            <a href="/foodlog/login" class="menu-item">{{ __('🔑 ログイン') }}</a>
+            <a href="/foodlog/register" class="menu-item">{{ __('✨ 新規会員登録') }}</a>
           @endauth
         </div>
       </div>
@@ -85,7 +90,7 @@
         if (!themeBtn) return;
         const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         themeBtn.textContent = isLight ? '☀️' : '🌙';
-        themeBtn.title = isLight ? 'ダークモードへ切替' : 'ライトモードへ切替';
+        themeBtn.title = isLight ? window.t('ダークモードへ切替') : window.t('ライトモードへ切替');
       }
       syncThemeIcon();
       if (themeBtn) {

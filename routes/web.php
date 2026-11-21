@@ -19,6 +19,14 @@ use Illuminate\Support\Facades\Route;
 */
 
 $registerAppRoutes = function () {
+    Route::get('/locale/{lang}', function (Request $request, string $lang) {
+        if (in_array($lang, ['ja', 'en'], true)) {
+            $request->session()->put('locale', $lang);
+        }
+        $back = url()->previous();
+        return redirect($back ?: '/foodlog/');
+    })->whereIn('lang', ['ja', 'en'])->name('locale.switch');
+
     Route::get('/', [PageController::class, 'home'])->name('home');
     Route::get('/index.php', [PageController::class, 'home']);
     Route::get('/restaurant', [PageController::class, 'restaurant'])->name('restaurant');

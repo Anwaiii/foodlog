@@ -1,5 +1,15 @@
+@php
+  $currentLocale = app()->getLocale();
+  $i18nDict = [];
+  if ($currentLocale === 'en') {
+      $enPath = lang_path('en.json');
+      if (file_exists($enPath)) {
+          $i18nDict = json_decode(file_get_contents($enPath), true) ?: [];
+      }
+  }
+@endphp
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="{{ $currentLocale }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,8 +25,13 @@
         }
       } catch (e) {}
     })();
+    window.LOCALE = @json($currentLocale);
+    window.I18N = @json($i18nDict);
+    window.t = function (key) {
+      return (window.I18N && Object.prototype.hasOwnProperty.call(window.I18N, key)) ? window.I18N[key] : key;
+    };
   </script>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122h" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122i" />
 </head>
 <body>
 

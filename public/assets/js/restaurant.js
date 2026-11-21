@@ -5,6 +5,14 @@ const GRADIENTS = [
   'linear-gradient(135deg, #0d1a00 0%, #3a5e00 100%)',
 ];
 
+function t(k) {
+  return typeof window.t === 'function' ? window.t(k) : k;
+}
+
+function isEn() {
+  return window.LOCALE === 'en';
+}
+
 function csrfHeaders() {
   const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   return { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' };
@@ -97,14 +105,14 @@ function renderFavoriteButton(r) {
   if (!favBtn || !r) return;
   const isFav = Boolean(r.is_favorited);
   favBtn.classList.toggle('favorited', isFav);
-  favBtn.textContent = isFav ? '❤️ お気に入り済' : '🤍 お気に入り';
+  favBtn.textContent = isFav ? t('❤️ お気に入り済') : t('🤍 お気に入り');
 
   if (!favBtn.dataset.bound) {
     favBtn.dataset.bound = '1';
     favBtn.addEventListener('click', async () => {
       const loggedIn = Boolean(window.AUTH && window.AUTH.loggedIn);
       if (!loggedIn) {
-        if (confirm('お気に入り登録にはログインが必要です。ログイン画面へ移動しますか？')) {
+        if (confirm(t('お気に入り登録にはログインが必要です。ログイン画面へ移動しますか？'))) {
           location.href = '/foodlog/login';
         }
         return;
@@ -249,11 +257,15 @@ function renderReviews() {
   const badge = document.getElementById('review-count-badge');
   if (badge) {
     if (!allTotal) {
-      badge.textContent = '0件';
+      badge.textContent = isEn() ? '0 Reviews' : '0件';
     } else if (filteredActive) {
-      badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${total} / ${allTotal}件`;
+      const unit = isEn() ? `${total} / ${allTotal} Reviews` : `${total} / ${allTotal}件`;
+      badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + unit;
     } else {
-      badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${allTotal}件`;
+      const unit = isEn()
+        ? `${allTotal} ${allTotal === 1 ? 'Review' : 'Reviews'}`
+        : `${allTotal}件`;
+      badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + unit;
     }
   }
 
@@ -266,15 +278,15 @@ function renderReviews() {
 
   if (!allTotal) {
     const empty = el('div', 'reviews-empty');
-    empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'まだレビューがありません。'));
+    empty.append(el('div', 'empty-icon', '📋'), el('p', '', t('まだレビューがありません。')));
     list.appendChild(empty);
     return;
   }
 
   if (!total) {
     const empty = el('div', 'reviews-empty');
-    empty.append(el('div', 'empty-icon', '🔍'), el('p', '', '条件に一致するレビューがありません。'));
-    const clearBtn = el('button', 'review-toggle-btn', '条件をリセット');
+    empty.append(el('div', 'empty-icon', '🔍'), el('p', '', t('条件に一致するレビューがありません。')));
+    const clearBtn = el('button', 'review-toggle-btn', t('条件をリセット'));
     clearBtn.type = 'button';
     clearBtn.style.marginTop = '0.75rem';
     clearBtn.addEventListener('click', resetReviewFilters);
@@ -312,7 +324,9 @@ function renderReviews() {
       if (rv.member_id) {
         const authorLink = el('a', 'review-author review-author-link', `👤 ${rv.member_nickname}`);
         authorLink.href = `/foodlog/users/${encodeURIComponent(rv.member_id)}`;
-        authorLink.title = `${rv.member_nickname} のレビュー履歴を見る`;
+        authorLink.title = isEn()
+          ? `View ${rv.member_nickname}'s review history`
+          : `${rv.member_nickname} のレビュー履歴を見る`;
         leftMeta.appendChild(authorLink);
       } else {
         leftMeta.appendChild(el('span', 'review-author', `👤 ${rv.member_nickname}`));
@@ -324,7 +338,7 @@ function renderReviews() {
     if (canEdit) {
       const editBtn = el('button', 'review-edit', '✏️');
       editBtn.type = 'button';
-      editBtn.title = 'Edit';
+      editBtn.title = t('編集');
       editBtn.dataset.id = rv.id;
       editBtn.dataset.date = rv.date;
       editBtn.dataset.order = rv.order_details || '';
@@ -337,7 +351,7 @@ function renderReviews() {
     if (canDelete) {
       const delBtn = el('button', 'review-delete', '🗑');
       delBtn.type = 'button';
-      delBtn.title = 'Delete';
+      delBtn.title = t('削除');
       delBtn.dataset.id = rv.id;
       delBtn.addEventListener('click', () => deleteReview(delBtn.dataset.id));
       actions.appendChild(delBtn);
@@ -356,7 +370,7 @@ function renderReviews() {
       const img = el('img', 'review-photo');
       img.src = `/foodlog/${rv.image}`;
       img.alt = 'Review photo';
-      img.title = 'クリックして拡大';
+      img.title = t('クリックして拡大');
       img.addEventListener('click', () => {
         const caption = rv.order_details ? `🍽️ ${rv.order_details}` : '';
         openPhotoLightbox(img.src, caption);
@@ -375,12 +389,12 @@ function renderReviews() {
     const rvFooter = el('div', 'review-footer');
     const likeCount = Number(rv.likes_count || 0);
     const isLiked = Boolean(rv.is_liked);
-    const likeBtn = el('button', `review-like-btn ${isLiked ? 'liked' : ''}`.trim(), `👍 役に立った (${likeCount})`);
+    const likeBtn = el('button', `review-like-btn ${isLiked ? 'liked' : ''}`.trim(), `${t('👍 役に立った')} (${likeCount})`);
     likeBtn.type = 'button';
-    likeBtn.title = loggedIn ? (isLiked ? '取り消す' : '役に立った！') : 'ログインして「役に立った」を押せます';
+    likeBtn.title = loggedIn ? (isLiked ? t('取り消す') : t('役に立った！')) : t('ログインして「役に立った」を押せます');
     likeBtn.addEventListener('click', async () => {
       if (!loggedIn) {
-        if (confirm('「役に立った」を押すにはログインが必要です。ログイン画面へ移動しますか？')) {
+        if (confirm(t('「役に立った」を押すにはログインが必要です。ログイン画面へ移動しますか？'))) {
           location.href = '/foodlog/login';
         }
         return;
@@ -397,7 +411,7 @@ function renderReviews() {
       rv.is_liked = data.liked;
       rv.likes_count = data.likes_count;
       likeBtn.classList.toggle('liked', rv.is_liked);
-      likeBtn.textContent = `👍 役に立った (${rv.likes_count})`;
+      likeBtn.textContent = `${t('👍 役に立った')} (${rv.likes_count})`;
     });
     rvFooter.appendChild(likeBtn);
     item.appendChild(rvFooter);
@@ -424,7 +438,7 @@ async function deleteReview(id) {
     headers: csrfHeaders(),
   });
   if (!res.ok) {
-    alert('削除権限がありません。');
+    alert(t('削除権限がありません。'));
     return;
   }
   loadReviews();
@@ -468,7 +482,7 @@ if (reviewForm) {
     if (!date || !order || !impression) return;
 
     const btn = e.target.querySelector('button[type="submit"]');
-    btn.textContent = '保存中…'; btn.disabled = true;
+    btn.textContent = t('保存中…'); btn.disabled = true;
 
     const formData = new FormData(e.target);
     formData.append('restaurant_id', restaurantId);
@@ -479,10 +493,10 @@ if (reviewForm) {
       body: formData,
     });
 
-    btn.textContent = 'Save Review'; btn.disabled = false;
+    btn.textContent = t('投稿する'); btn.disabled = false;
 
     if (!res.ok) {
-      alert('レビューの保存に失敗しました。ログイン状態を確認してください。');
+      alert(t('レビューの保存に失敗しました。ログイン状態を確認してください。'));
       return;
     }
 
@@ -528,16 +542,19 @@ function showImagePreview(file, placeholder, preview) {
 const deleteRestaurantBtn = document.getElementById('delete-restaurant-btn');
 if (deleteRestaurantBtn) {
   deleteRestaurantBtn.addEventListener('click', async () => {
-    const name = currentRestaurant ? currentRestaurant.name : 'このレストラン';
-    if (!confirm(`「${name}」を削除しますか？\nすべてのレビューも削除されます。`)) return;
-    deleteRestaurantBtn.textContent = '削除中…'; deleteRestaurantBtn.disabled = true;
+    const name = currentRestaurant ? currentRestaurant.name : (isEn() ? 'this restaurant' : 'このレストラン');
+    const delMsg = isEn()
+      ? `Delete "${name}"?\nAll reviews for this restaurant will also be deleted.`
+      : `「${name}」を削除しますか？\nすべてのレビューも削除されます。`;
+    if (!confirm(delMsg)) return;
+    deleteRestaurantBtn.textContent = t('削除中…'); deleteRestaurantBtn.disabled = true;
     const res = await fetch(`/foodlog/api/restaurants.php?id=${encodeURIComponent(restaurantId)}`, {
       method: 'DELETE',
       headers: csrfHeaders(),
     });
     if (!res.ok) {
-      alert('削除権限がありません。');
-      deleteRestaurantBtn.textContent = '🗑 Delete'; deleteRestaurantBtn.disabled = false;
+      alert(t('削除権限がありません。'));
+      deleteRestaurantBtn.textContent = t('🗑 店舗を削除'); deleteRestaurantBtn.disabled = false;
       return;
     }
     window.location.href = '/foodlog/';
@@ -595,7 +612,7 @@ if (editRestaurantForm) {
   editRestaurantForm.addEventListener('submit', async e => {
     e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
-    btn.textContent = '保存中…'; btn.disabled = true;
+    btn.textContent = t('保存中…'); btn.disabled = true;
 
     const formData = new FormData(e.target);
     const res = await fetch(`/foodlog/api/restaurants.php?id=${encodeURIComponent(restaurantId)}`, {
@@ -604,16 +621,16 @@ if (editRestaurantForm) {
       body: formData,
     });
 
-    btn.textContent = 'Save Changes'; btn.disabled = false;
+    btn.textContent = t('変更を保存'); btn.disabled = false;
 
     if (!res.ok) {
       if (res.status === 401 || res.status === 403) {
-        alert('更新権限がありません。');
+        alert(t('更新権限がありません。'));
       } else if (res.status === 422) {
         const errData = await res.json().catch(() => ({}));
-        alert('入力エラー: ' + (errData.message || '入力内容を確認してください。'));
+        alert(t('入力エラー: ') + (errData.message || t('入力内容を確認してください。')));
       } else {
-        alert(`更新に失敗しました（HTTP ${res.status}）。`);
+        alert(isEn() ? `Update failed (HTTP ${res.status}).` : `更新に失敗しました（HTTP ${res.status}）。`);
       }
       return;
     }
@@ -681,7 +698,7 @@ if (editReviewForm) {
     if (!date || !order || !impression) return;
 
     const btn = e.target.querySelector('button[type="submit"]');
-    btn.textContent = '保存中…'; btn.disabled = true;
+    btn.textContent = t('保存中…'); btn.disabled = true;
 
     const formData = new FormData(e.target);
     const res = await fetch(`/foodlog/api/reviews.php?id=${encodeURIComponent(id)}`, {
@@ -690,16 +707,16 @@ if (editReviewForm) {
       body: formData,
     });
 
-    btn.textContent = 'Save Changes'; btn.disabled = false;
+    btn.textContent = t('変更を保存'); btn.disabled = false;
 
     if (!res.ok) {
       if (res.status === 401 || res.status === 403) {
-        alert('レビューの更新権限がありません。');
+        alert(t('レビューの更新権限がありません。'));
       } else if (res.status === 422) {
         const errData = await res.json().catch(() => ({}));
-        alert('入力エラー: ' + (errData.message || '入力内容を確認してください。'));
+        alert(t('入力エラー: ') + (errData.message || t('入力内容を確認してください。')));
       } else {
-        alert(`レビューの更新に失敗しました（HTTP ${res.status}）。`);
+        alert(isEn() ? `Failed to update review (HTTP ${res.status}).` : `レビューの更新に失敗しました（HTTP ${res.status}）。`);
       }
       return;
     }

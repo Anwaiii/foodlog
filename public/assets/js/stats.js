@@ -7,6 +7,14 @@ const GRADIENTS = [
   'linear-gradient(135deg, #0d1a00 0%, #3a5e00 100%)',
 ];
 
+function t(k) {
+  return typeof window.t === 'function' ? window.t(k) : k;
+}
+
+function isEn() {
+  return window.LOCALE === 'en';
+}
+
 function el(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -32,7 +40,7 @@ function renderSummary(restaurants, reviews) {
   document.getElementById('s-restaurants').textContent = restaurants.length;
   document.getElementById('s-reviews').textContent = reviews.length;
   const totalBadge = document.getElementById('total-reviews-badge');
-  if (totalBadge) totalBadge.textContent = reviews.length + ' Reviews';
+  if (totalBadge) totalBadge.textContent = isEn() ? `${reviews.length} Reviews` : `${reviews.length}件`;
 
   const rated = reviews.filter(r => Number(r.rating) > 0);
   if (rated.length > 0) {
@@ -56,7 +64,9 @@ function renderMonthlyChart(reviews) {
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const label = `${d.getFullYear()}年${d.getMonth() + 1}月`;
+    const label = isEn()
+      ? d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      : `${d.getFullYear()}年${d.getMonth() + 1}月`;
     months.push({ key, label, count: 0 });
   }
 
@@ -89,7 +99,7 @@ function renderCategoryChart(restaurants) {
 
   const cats = {};
   restaurants.forEach(r => {
-    const cat = r.category || 'Other';
+    const cat = r.category || t('その他');
     cats[cat] = (cats[cat] || 0) + 1;
   });
 
@@ -133,7 +143,7 @@ function renderRanking(restaurants, reviews) {
 
   if (top.length === 0) {
     const empty = el('div', 'reviews-empty');
-    empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'まだレビューがありません。'));
+    empty.append(el('div', 'empty-icon', '📋'), el('p', '', t('まだレビューがありません。')));
     container.appendChild(empty);
     return;
   }
@@ -153,9 +163,12 @@ function renderRanking(restaurants, reviews) {
     }
 
     const info = el('div', 'ranking-info');
+    const reviewLabel = isEn()
+      ? `${r.reviewCount} ${r.reviewCount === 1 ? 'review' : 'reviews'}`
+      : `${r.reviewCount}件のレビュー`;
     info.append(
       el('div', 'ranking-name', r.name || ''),
-      el('div', 'ranking-meta', `★ ${r.avg.toFixed(1)}\u00A0\u00A0\u00A0${r.reviewCount}件のレビュー`)
+      el('div', 'ranking-meta', `★ ${r.avg.toFixed(1)}\u00A0\u00A0\u00A0${reviewLabel}`)
     );
 
     link.append(
