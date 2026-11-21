@@ -10,6 +10,10 @@
         <p>現在ログイン中の会員情報です。</p>
       </div>
 
+      @if(session('status'))
+        <div class="alert-success">{{ session('status') }}</div>
+      @endif
+
       <div class="profile-list">
         <div class="profile-row">
           <span class="profile-label">会員ID</span>

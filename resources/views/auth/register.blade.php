@@ -7,7 +7,7 @@
       <div class="auth-header">
         <div class="hero-tag">✨ Sign Up</div>
         <h1>新規会員登録</h1>
-        <p>必要事項を入力してアカウントを作成してください（登録後すぐにご利用いただけます）。</p>
+        <p>必要事項を入力してアカウントを作成してください（会員IDはシステムが自動採番します）。</p>
       </div>
 
       @if($errors->any())
@@ -21,14 +21,9 @@
       <form method="POST" action="/foodlog/register">
         @csrf
         <div class="form-group">
-          <label for="member_id">会員ID（半角英数字・3〜50文字）</label>
-          <input type="text" id="member_id" name="member_id" value="{{ old('member_id') }}"
-                 placeholder="e.g. tanaka_01" minlength="3" maxlength="50" pattern="[a-zA-Z0-9_-]+" required autofocus />
-        </div>
-        <div class="form-group">
           <label for="name">お名前</label>
           <input type="text" id="name" name="name" value="{{ old('name') }}"
-                 placeholder="e.g. 田中 太郎" maxlength="100" required />
+                 placeholder="e.g. 田中 太郎" maxlength="100" required autofocus />
         </div>
         <div class="form-group">
           <label for="name_kana">お名前（カナ）</label>

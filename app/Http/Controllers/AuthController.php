@@ -75,18 +75,12 @@ class AuthController extends Controller
     public function register(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'member_id' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-zA-Z0-9_-]+$/', 'unique:members,member_id'],
             'name'      => ['required', 'string', 'max:100'],
             'name_kana' => ['required', 'string', 'max:100'],
             'nickname'  => ['required', 'string', 'max:50'],
             'email'     => ['required', 'email', 'max:255', 'unique:members,email'],
             'password'  => ['required', 'string', 'min:8', 'max:100', 'confirmed'],
         ], [
-            'member_id.required' => '会員IDを入力してください。',
-            'member_id.min'      => '会員IDは3文字以上で入力してください。',
-            'member_id.max'      => '会員IDは50文字以内で入力してください。',
-            'member_id.regex'    => '会員IDは半角英数字・ハイフン・アンダースコアのみ使用できます。',
-            'member_id.unique'   => 'この会員IDはすでに使用されています。',
             'name.required'      => 'お名前を入力してください。',
             'name_kana.required' => 'お名前（カナ）を入力してください。',
             'nickname.required'  => 'ニックネームを入力してください。',
@@ -98,8 +92,15 @@ class AuthController extends Controller
             'password.confirmed' => 'パスワード（確認）が一致しません。',
         ]);
 
+        // システム側で一意の会員IDを自動採番（例: M000014）
+        $seq = (int) (Member::max('id') ?? 0) + 1;
+        do {
+            $memberId = 'M' . str_pad((string) $seq, 6, '0', STR_PAD_LEFT);
+            $seq++;
+        } while (Member::where('member_id', $memberId)->exists());
+
         $member = Member::create([
-            'member_id'   => trim($validated['member_id']),
+            'member_id'   => $memberId,
             'name'        => trim($validated['name']),
             'name_kana'   => trim($validated['name_kana']),
             'nickname'    => trim($validated['nickname']),
@@ -112,6 +113,7 @@ class AuthController extends Controller
         Auth::login($member);
         $request->session()->regenerate();
 
-        return redirect('/foodlog/');
+        return redirect('/foodlog/member')
+            ->with('status', "会員登録が完了しました！あなたの会員IDは「{$member->member_id}」です。");
     }
 }
