@@ -6,7 +6,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>FoodLog — Uber Eats Review Tracker</title>
   <meta name="description" content="Track and review your Uber Eats orders." />
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261120f" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122a" />
 </head>
 <body>
 
@@ -33,6 +33,38 @@
   </section>
 
   <main class="section">
+    <!-- Search & Filters (integrated from Search screen) -->
+    <div class="search-bar-wrapper" style="margin-bottom:1.25rem;max-width:100%;">
+      <input type="search" class="search-input" id="search-input"
+             placeholder="🔍 Search restaurants, categories, reviews..." />
+    </div>
+    <div class="filter-bar" id="filter-bar">
+      <div class="filter-group">
+        <label class="filter-label">Category</label>
+        <div class="filter-chips" id="category-chips">
+          <button type="button" class="filter-chip active" data-category="all">All</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Min Rating</label>
+        <div class="filter-chips" id="rating-chips">
+          <button type="button" class="filter-chip active" data-rating="0">All</button>
+          <button type="button" class="filter-chip" data-rating="3">★3+</button>
+          <button type="button" class="filter-chip" data-rating="4">★4+</button>
+          <button type="button" class="filter-chip" data-rating="5">★5</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Sort by</label>
+        <div class="filter-chips" id="sort-chips">
+          <button type="button" class="filter-chip active" data-sort="default">Default</button>
+          <button type="button" class="filter-chip" data-sort="reviews">Most Reviews</button>
+          <button type="button" class="filter-chip" data-sort="rating">Highest Rated</button>
+          <button type="button" class="filter-chip" data-sort="newest">Newest</button>
+        </div>
+      </div>
+    </div>
+
     <div class="section-header">
       <div class="section-title">Restaurants <span id="restaurant-count"></span></div>
       @if(Auth::check() && Auth::user()->isAdmin())
@@ -107,6 +139,6 @@
       userId: {{ Auth::check() ? Auth::id() : 'null' }}
     };
   </script>
-  <script src="/foodlog/assets/js/app.js?v=20261120f"></script>
+  <script src="/foodlog/assets/js/app.js?v=20261122a"></script>
 </body>
 </html>

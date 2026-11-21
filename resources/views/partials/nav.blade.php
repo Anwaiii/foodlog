@@ -6,7 +6,6 @@
     <div class="nav-links">
       <a href="/foodlog/" class="nav-link {{ ($active ?? '') === 'home' ? 'active' : '' }}">Home</a>
       <a href="/foodlog/stats.php" class="nav-link {{ ($active ?? '') === 'stats' ? 'active' : '' }}">Stats</a>
-      <a href="/foodlog/search.php" class="nav-link {{ ($active ?? '') === 'search' ? 'active' : '' }}">Search</a>
     </div>
     <div class="nav-right">
       @auth

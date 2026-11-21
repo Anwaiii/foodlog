@@ -32,6 +32,7 @@ class RestaurantController extends Controller
     {
         $restaurants = Restaurant::query()
             ->withCount('reviews')
+            ->withAvg('reviews as avg_rating', 'rating')
             ->withMax('reviews as latest_date', 'date')
             ->orderBy('created_at', 'ASC')
             ->get()
@@ -39,6 +40,7 @@ class RestaurantController extends Controller
                 // 旧コード互換の review_count (エイリアス)
                 $data = $r->toArray();
                 $data['review_count'] = $r->reviews_count;
+                $data['avg_rating'] = $r->avg_rating ? round((float)$r->avg_rating, 1) : 0;
                 return $data;
             });
 

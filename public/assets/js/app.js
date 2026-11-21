@@ -5,6 +5,15 @@ const GRADIENTS = [
   'linear-gradient(135deg, #0d1a00 0%, #3a5e00 100%)',
 ];
 
+let allRestaurants = [];
+let allReviewsMap = {}; // { restaurantId: [reviews] }
+const homeFilters = {
+  query: '',
+  category: 'all',
+  minRating: 0,
+  sort: 'default',
+};
+
 function csrfHeaders() {
   const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   return { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' };
@@ -19,26 +28,175 @@ function el(tag, className, text) {
 
 async function loadRestaurants() {
   const res = await fetch('/foodlog/api/restaurants.php');
-  return res.json();
+  allRestaurants = await res.json();
+
+  await Promise.all(allRestaurants.map(async r => {
+    try {
+      const rv = await fetch(`/foodlog/api/reviews.php?restaurant_id=${encodeURIComponent(r.id)}`);
+      allReviewsMap[r.id] = await rv.json();
+    } catch {
+      allReviewsMap[r.id] = [];
+    }
+  }));
+
+  return allRestaurants;
+}
+
+function updateHeroStats(restaurants) {
+  let totalReviews = 0;
+  restaurants.forEach(r => { totalReviews += parseInt(r.review_count) || 0; });
+
+  const statRest = document.getElementById('stat-restaurants');
+  const statRev = document.getElementById('stat-reviews');
+  const totalBadge = document.getElementById('total-reviews-badge');
+  if (statRest) statRest.textContent = restaurants.length;
+  if (statRev) statRev.textContent = totalReviews;
+  if (totalBadge) totalBadge.textContent = totalReviews + ' Reviews';
+
+  const dates = restaurants.map(r => r.latest_date).filter(Boolean).sort().reverse();
+  const statLatest = document.getElementById('stat-latest');
+  if (statLatest) {
+    if (dates.length) {
+      const d = new Date(dates[0] + 'T00:00:00');
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      statLatest.textContent = `${y}/${m}/${day}`;
+    } else {
+      statLatest.textContent = '—';
+    }
+  }
+}
+
+function buildCategoryChips(restaurants) {
+  const container = document.getElementById('category-chips');
+  if (!container) return;
+  container.replaceChildren();
+
+  const allBtn = el('button', `filter-chip ${homeFilters.category === 'all' ? 'active' : ''}`.trim(), 'All');
+  allBtn.type = 'button';
+  allBtn.dataset.category = 'all';
+  container.appendChild(allBtn);
+
+  const cats = new Set();
+  restaurants.forEach(r => { if (r.category) cats.add(r.category); });
+  [...cats].sort().forEach(cat => {
+    const btn = el('button', `filter-chip ${homeFilters.category === cat ? 'active' : ''}`.trim(), cat);
+    btn.type = 'button';
+    btn.dataset.category = cat;
+    container.appendChild(btn);
+  });
+}
+
+function getFilteredRestaurants() {
+  let results = allRestaurants.map(r => {
+    const reviews = allReviewsMap[r.id] || [];
+    const rated = reviews.filter(rv => Number(rv.rating) > 0);
+    const avgRating = rated.length > 0
+      ? rated.reduce((s, rv) => s + Number(rv.rating), 0) / rated.length
+      : (Number(r.avg_rating) || 0);
+    const reviewCount = parseInt(r.review_count) || reviews.length || 0;
+    return { ...r, reviews, avgRating, reviewCount };
+  });
+
+  if (homeFilters.query) {
+    const q = homeFilters.query.toLowerCase();
+    results = results.filter(r => {
+      const nameMatch = (r.name || '').toLowerCase().includes(q);
+      const catMatch = (r.category || '').toLowerCase().includes(q);
+      const descMatch = (r.description || '').toLowerCase().includes(q);
+      const addrMatch = (r.address || '').toLowerCase().includes(q);
+      const reviewMatch = r.reviews.some(rv =>
+        (rv.order_details || '').toLowerCase().includes(q) ||
+        (rv.impression || '').toLowerCase().includes(q)
+      );
+      return nameMatch || catMatch || descMatch || addrMatch || reviewMatch;
+    });
+  }
+
+  if (homeFilters.category !== 'all') {
+    results = results.filter(r => r.category === homeFilters.category);
+  }
+
+  if (homeFilters.minRating > 0) {
+    results = results.filter(r => r.avgRating >= homeFilters.minRating);
+  }
+
+  switch (homeFilters.sort) {
+    case 'reviews':
+      results.sort((a, b) => b.reviewCount - a.reviewCount);
+      break;
+    case 'rating':
+      results.sort((a, b) => b.avgRating - a.avgRating);
+      break;
+    case 'newest':
+      results.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      break;
+    case 'default':
+    default:
+      break;
+  }
+
+  return results;
+}
+
+function resetHomeFilters() {
+  homeFilters.query = '';
+  homeFilters.category = 'all';
+  homeFilters.minRating = 0;
+  homeFilters.sort = 'default';
+
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) searchInput.value = '';
+  document.querySelectorAll('#category-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.category === 'all'));
+  document.querySelectorAll('#rating-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.rating === '0'));
+  document.querySelectorAll('#sort-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.sort === 'default'));
+
+  renderFilteredGrid();
+}
+
+function renderFilteredGrid() {
+  const restaurants = getFilteredRestaurants();
+  renderGrid(restaurants);
 }
 
 function renderGrid(restaurants) {
   const grid = document.getElementById('restaurant-grid');
   grid.replaceChildren();
 
-  if (!restaurants.length) {
+  const countEl = document.getElementById('restaurant-count');
+  const isFiltered = homeFilters.query || homeFilters.category !== 'all' || homeFilters.minRating > 0;
+  if (countEl) {
+    countEl.textContent = isFiltered
+      ? `(${restaurants.length} / ${allRestaurants.length})`
+      : `(${restaurants.length})`;
+  }
+
+  if (!allRestaurants.length) {
     const empty = el('div', 'empty-state');
     empty.append(el('div', 'empty-icon', '🍽️'), el('p', '', 'No restaurants yet. Add one!'));
     grid.appendChild(empty);
     return;
   }
 
-  let totalReviews = 0;
+  if (!restaurants.length) {
+    const empty = el('div', 'empty-state');
+    const p = el('p');
+    p.append(document.createTextNode('No restaurants found.'), el('br'), document.createTextNode('Try a different search or filter.'));
+    const resetBtn = el('button', 'filter-chip', 'Reset Filters');
+    resetBtn.type = 'button';
+    resetBtn.style.marginTop = '0.9rem';
+    resetBtn.addEventListener('click', resetHomeFilters);
+    empty.append(el('div', 'empty-icon', '🔍'), p, resetBtn);
+    grid.appendChild(empty);
+    return;
+  }
+
   const isAdmin = Boolean(window.AUTH && window.AUTH.isAdmin);
 
   restaurants.forEach((r, idx) => {
-    const count = parseInt(r.review_count) || 0;
-    totalReviews += count;
+    const count = parseInt(r.reviewCount ?? r.review_count) || 0;
+    const avgText = r.avgRating > 0 ? `★ ${r.avgRating.toFixed(1)}` : 'No rating';
 
     const card = el('a', 'restaurant-card');
     card.href = `/foodlog/restaurant.php?id=${encodeURIComponent(r.id)}`;
@@ -103,37 +261,71 @@ function renderGrid(restaurants) {
     const footer = el('div', 'card-footer');
     const reviewCountEl = el('div', 'review-count');
     const strong = el('strong', '', String(count));
-    reviewCountEl.append(strong, document.createTextNode(count === 1 ? ' review' : ' reviews'));
+    reviewCountEl.append(strong, document.createTextNode((count === 1 ? ' review' : ' reviews') + `  ·  ${avgText}`));
     footer.append(reviewCountEl, el('div', 'card-arrow', '→'));
     body.appendChild(footer);
 
     card.appendChild(body);
     grid.appendChild(card);
   });
+}
 
-  document.getElementById('stat-restaurants').textContent = restaurants.length;
-  document.getElementById('stat-reviews').textContent = totalReviews;
-  const totalBadge = document.getElementById('total-reviews-badge');
-  if (totalBadge) totalBadge.textContent = totalReviews + ' Reviews';
-  document.getElementById('restaurant-count').textContent = '(' + restaurants.length + ')';
+// ─── 検索・フィルターイベント登録 ──────────────────────────────────────────────
+function setupHomeFilters() {
+  const searchInput = document.getElementById('search-input');
+  if (searchInput && !searchInput.dataset.bound) {
+    searchInput.addEventListener('input', e => {
+      homeFilters.query = e.target.value.trim();
+      renderFilteredGrid();
+    });
+    searchInput.dataset.bound = '1';
+  }
 
-  // 最新注文日を表示
-  const dates = restaurants.map(r => r.latest_date).filter(Boolean).sort().reverse();
-  if (dates.length) {
-    const d = new Date(dates[0] + 'T00:00:00');
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    document.getElementById('stat-latest').textContent = `${y}/${m}/${day}`;
-  } else {
-    document.getElementById('stat-latest').textContent = '—';
+  const catChips = document.getElementById('category-chips');
+  if (catChips && !catChips.dataset.bound) {
+    catChips.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-chip');
+      if (!btn) return;
+      catChips.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      homeFilters.category = btn.dataset.category;
+      renderFilteredGrid();
+    });
+    catChips.dataset.bound = '1';
+  }
+
+  const ratingChips = document.getElementById('rating-chips');
+  if (ratingChips && !ratingChips.dataset.bound) {
+    ratingChips.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-chip');
+      if (!btn) return;
+      ratingChips.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      homeFilters.minRating = Number(btn.dataset.rating);
+      renderFilteredGrid();
+    });
+    ratingChips.dataset.bound = '1';
+  }
+
+  const sortChips = document.getElementById('sort-chips');
+  if (sortChips && !sortChips.dataset.bound) {
+    sortChips.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-chip');
+      if (!btn) return;
+      sortChips.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      homeFilters.sort = btn.dataset.sort;
+      renderFilteredGrid();
+    });
+    sortChips.dataset.bound = '1';
   }
 }
 
 // ─── Upload area setup ────────────────────────────────────────────────────────
 function setupUploadArea(areaId, placeholderId, previewId, inputId) {
   const area = document.getElementById(areaId);
-  if (!area) return;
+  if (!area || area.dataset.bound) return;
+  area.dataset.bound = '1';
   const placeholder = document.getElementById(placeholderId);
   const preview = document.getElementById(previewId);
   const input = document.getElementById(inputId);
@@ -218,7 +410,10 @@ function setupCharCounter(inputId, counterId) {
     counter.className = 'char-count' +
       (ratio >= 1 ? ' at-limit' : ratio >= 0.8 ? ' near-limit' : '');
   };
-  input.addEventListener('input', update);
+  if (!input.dataset.counterBound) {
+    input.addEventListener('input', update);
+    input.dataset.counterBound = '1';
+  }
   update();
 }
 
@@ -230,8 +425,12 @@ async function init() {
   setupCharCounter('r-desc', 'r-desc-count');
   setupCharCounter('r-address', 'r-address-count');
 
+  setupHomeFilters();
+
   const restaurants = await loadRestaurants();
-  renderGrid(restaurants);
+  updateHeroStats(restaurants);
+  buildCategoryChips(restaurants);
+  renderFilteredGrid();
 }
 
 init();

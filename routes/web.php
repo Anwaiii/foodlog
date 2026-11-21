@@ -22,8 +22,8 @@ $registerAppRoutes = function () {
     Route::get('/restaurant.php', [PageController::class, 'restaurant']);
     Route::get('/stats', [PageController::class, 'stats'])->name('stats');
     Route::get('/stats.php', [PageController::class, 'stats']);
-    Route::get('/search', [PageController::class, 'search'])->name('search');
-    Route::get('/search.php', [PageController::class, 'search']);
+    Route::redirect('/search', '/foodlog/');
+    Route::redirect('/search.php', '/foodlog/');
 
     // 認証・会員画面
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

@@ -21,9 +21,4 @@ class PageController extends Controller
     {
         return view('stats');
     }
-
-    public function search(): View
-    {
-        return view('search');
-    }
 }
