@@ -7,8 +7,8 @@ const GRADIENTS = [
   'linear-gradient(135deg, #0d1a00 0%, #3a5e00 100%)',
 ];
 
-function t(k) {
-  return typeof window.t === 'function' ? window.t(k) : k;
+if (typeof window.t !== 'function') {
+  window.t = k => k;
 }
 
 function isEn() {

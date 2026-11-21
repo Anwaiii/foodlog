@@ -229,5 +229,5 @@
     };
   </script>
   <script src="/foodlog/assets/js/pagination.js?v=20261122c"></script>
-  <script src="/foodlog/assets/js/restaurant.js?v=20261122f"></script>
+  <script src="/foodlog/assets/js/restaurant.js?v=20261122g"></script>
 @endsection

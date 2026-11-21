@@ -52,5 +52,5 @@
 @endsection
 
 @section('scripts')
-  <script src="/foodlog/assets/js/stats.js?v=20261122c"></script>
+  <script src="/foodlog/assets/js/stats.js?v=20261122d"></script>
 @endsection

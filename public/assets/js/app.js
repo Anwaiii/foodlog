@@ -17,8 +17,8 @@ const homeFilters = {
   favOnly: false,
 };
 
-function t(k) {
-  return typeof window.t === 'function' ? window.t(k) : k;
+if (typeof window.t !== 'function') {
+  window.t = k => k;
 }
 
 function isEn() {
