@@ -241,6 +241,6 @@
     };
   </script>
   <script src="/foodlog/assets/js/pagination.js?v=20261122a"></script>
-  <script src="/foodlog/assets/js/restaurant.js?v=20261122a"></script>
+  <script src="/foodlog/assets/js/restaurant.js?v=20261122b"></script>
 </body>
 </html>

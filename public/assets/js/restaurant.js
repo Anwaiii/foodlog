@@ -532,7 +532,14 @@ if (editRestaurantForm) {
     btn.textContent = 'Save Changes'; btn.disabled = false;
 
     if (!res.ok) {
-      alert('更新権限がありません。');
+      if (res.status === 401 || res.status === 403) {
+        alert('更新権限がありません。');
+      } else if (res.status === 422) {
+        const errData = await res.json().catch(() => ({}));
+        alert('入力エラー: ' + (errData.message || '入力内容を確認してください。'));
+      } else {
+        alert(`更新に失敗しました（HTTP ${res.status}）。`);
+      }
       return;
     }
 
@@ -611,7 +618,14 @@ if (editReviewForm) {
     btn.textContent = 'Save Changes'; btn.disabled = false;
 
     if (!res.ok) {
-      alert('レビューの更新権限がありません。');
+      if (res.status === 401 || res.status === 403) {
+        alert('レビューの更新権限がありません。');
+      } else if (res.status === 422) {
+        const errData = await res.json().catch(() => ({}));
+        alert('入力エラー: ' + (errData.message || '入力内容を確認してください。'));
+      } else {
+        alert(`レビューの更新に失敗しました（HTTP ${res.status}）。`);
+      }
       return;
     }
 
