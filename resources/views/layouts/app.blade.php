@@ -7,7 +7,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>@yield('title', 'FoodLog')</title>
   @yield('meta')
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122f" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122g" />
 </head>
 <body>
 

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Member;
+use App\Models\Review;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,5 +51,46 @@ class MemberController extends Controller
         ]);
 
         return back()->with('status', 'パスワードを変更しました。');
+    }
+
+    public function publicProfile(int $id): View
+    {
+        $target = Member::where('id', $id)
+            ->where('delete_flg', false)
+            ->firstOrFail();
+
+        $reviews = Review::with('restaurant')
+            ->where('member_id', $target->id)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $rated = $reviews->filter(fn ($rv) => (int) ($rv->rating ?? 0) > 0);
+        $avgRating = $rated->count() > 0
+            ? round($rated->avg('rating'), 1)
+            : null;
+        $restaurantCount = $reviews->pluck('restaurant_id')->unique()->count();
+
+        $reviewsPayload = $reviews->map(function ($rv) {
+            return [
+                'id'              => $rv->id,
+                'restaurant_id'   => $rv->restaurant_id,
+                'restaurant_name' => $rv->restaurant?->name ?? 'Unknown Restaurant',
+                'date'            => $rv->date,
+                'order_details'   => $rv->order_details,
+                'impression'      => $rv->impression,
+                'rating'          => $rv->rating,
+                'image'           => $rv->image,
+            ];
+        })->values();
+
+        return view('member.reviews', [
+            'nickname'        => $target->nickname,
+            'isAdmin'         => $target->isAdmin(),
+            'totalReviews'    => $reviews->count(),
+            'restaurantCount' => $restaurantCount,
+            'avgRating'       => $avgRating,
+            'reviewsPayload'  => $reviewsPayload,
+        ]);
     }
 }

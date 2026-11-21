@@ -271,7 +271,14 @@ function renderReviews() {
     leftMeta.style.cssText = 'display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;';
     leftMeta.appendChild(el('div', 'review-date', `📅 ${formatted}`));
     if (rv.member_nickname) {
-      leftMeta.appendChild(el('span', 'review-author', `👤 ${rv.member_nickname}`));
+      if (rv.member_id) {
+        const authorLink = el('a', 'review-author review-author-link', `👤 ${rv.member_nickname}`);
+        authorLink.href = `/foodlog/users/${encodeURIComponent(rv.member_id)}`;
+        authorLink.title = `${rv.member_nickname} のレビュー履歴を見る`;
+        leftMeta.appendChild(authorLink);
+      } else {
+        leftMeta.appendChild(el('span', 'review-author', `👤 ${rv.member_nickname}`));
+      }
     }
 
     const actions = el('div');

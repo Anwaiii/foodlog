@@ -738,6 +738,29 @@ footer {
   font-size: 0.78rem; font-weight: 600; color: var(--muted);
   background: rgba(255,255,255,0.05); padding: 3px 9px; border-radius: 6px;
 }
+.review-author-link {
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+.review-author-link:hover {
+  color: var(--text);
+  background: rgba(255,107,53,0.16);
+  border-color: rgba(255,107,53,0.45);
+}
+.review-restaurant-link {
+  font-size: 0.8rem; font-weight: 600; color: var(--text);
+  background: rgba(124,58,237,0.16);
+  border: 1px solid rgba(124,58,237,0.35);
+  padding: 3px 10px; border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+.review-restaurant-link:hover {
+  background: rgba(124,58,237,0.3);
+  border-color: var(--purple);
+}
 
 .nav-user-pill {
   display: inline-flex; align-items: center; gap: 0.4rem;

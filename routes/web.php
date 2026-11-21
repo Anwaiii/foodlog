@@ -39,6 +39,8 @@ $registerAppRoutes = function () {
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm']);
     Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:5,1');
 
+    Route::get('/users/{id}', [MemberController::class, 'publicProfile'])->whereNumber('id')->name('users.show');
+
     Route::middleware('auth')->group(function () {
         Route::get('/member', [MemberController::class, 'show']);
         Route::get('/member/password', [MemberController::class, 'editPassword']);
