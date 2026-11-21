@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
   <title>パスワード変更 — FoodLog</title>
   <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122d" />
 </head>
@@ -52,7 +53,10 @@
     </div>
   </main>
 
-  <footer><p>FoodLog — Data saved in MySQL database 🗄️</p></footer>
+    <footer>
+    <p>FoodLog — Data saved in MySQL database 🗄️</p>
+    <p style="margin-top:0.35rem;font-size:0.78rem;opacity:0.85;">※これは学習・ポートフォリオ用のデモサイトです。レビューや評価はすべて架空のテストデータです。</p>
+  </footer>
 
 </body>
 </html>
