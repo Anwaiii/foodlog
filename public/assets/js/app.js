@@ -257,17 +257,19 @@ function renderGrid(restaurants) {
     }
 
     const body = el('div', 'card-body');
+    const nameEl = el('div', 'card-name', r.name || '');
+    nameEl.title = r.name || '';
+    const descEl = el('div', 'card-desc', r.description || '');
+    descEl.title = r.description || '';
     body.append(
       el('div', 'card-category', r.category || ''),
-      el('div', 'card-name', r.name || ''),
-      el('div', 'card-desc', r.description || '')
+      nameEl,
+      descEl
     );
 
-    if (r.address) {
-      const addr = el('div', 'card-address', `📍 ${r.address}`);
-      addr.style.cssText = 'font-size:0.85rem;color:var(--muted);margin-top:0.4rem;';
-      body.appendChild(addr);
-    }
+    const addr = el('div', 'card-address', r.address ? `📍 ${r.address}` : '');
+    if (r.address) addr.title = r.address;
+    body.appendChild(addr);
 
     const footer = el('div', 'card-footer');
     const reviewCountEl = el('div', 'review-count');
