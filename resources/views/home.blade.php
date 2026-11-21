@@ -6,7 +6,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>FoodLog — Uber Eats Review Tracker</title>
   <meta name="description" content="Track and review your Uber Eats orders." />
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122e" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122f" />
 </head>
 <body>
 

@@ -84,7 +84,7 @@ body {
 .hero-stats .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
 
 /* SECTION */
-.section { padding: 2rem; max-width: 1600px; margin: 0 auto; }
+.section { padding: 2rem; max-width: 1720px; margin: 0 auto; }
 .section-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1.8rem;
@@ -129,6 +129,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 360px;
 }
 .restaurant-card:hover {
   transform: translateY(-5px);
@@ -136,41 +137,44 @@ body {
   box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,107,53,0.1);
 }
 .card-image {
-  width: 100%; height: 170px; object-fit: cover;
+  width: 100%; height: 175px; object-fit: cover;
   display: block; flex-shrink: 0;
 }
 .card-image-placeholder {
-  width: 100%; height: 170px; flex-shrink: 0;
+  width: 100%; height: 175px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   font-size: 3.5rem;
 }
 .card-body {
-  padding: 1.05rem 1.1rem 1rem;
+  padding: 1.1rem 1.15rem 1rem;
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
 }
 .card-category {
-  font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+  font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--accent); margin-bottom: 0.35rem;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .card-name {
-  font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 1rem; font-weight: 700; margin-bottom: 0.45rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .card-desc {
   font-size: 0.82rem; color: var(--muted); line-height: 1.45;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 2.9em;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.65rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .card-address {
-  font-size: 0.78rem; color: var(--muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  min-height: 1.3em;
+  font-size: 0.78rem; color: var(--muted); line-height: 1.4;
   margin-bottom: 0.8rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .card-footer {
   display: flex; align-items: center; justify-content: space-between;
