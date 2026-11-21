@@ -5,9 +5,6 @@
     </a>
     <div class="nav-links">
       <a href="/foodlog/" class="nav-link {{ ($active ?? '') === 'home' ? 'active' : '' }}">{{ __('ホーム') }}</a>
-      @auth
-        <a href="/foodlog/favorites" class="nav-link {{ ($active ?? '') === 'favorites' ? 'active' : '' }}">{{ __('❤️ お気に入り') }}</a>
-      @endauth
       <a href="/foodlog/stats.php" class="nav-link {{ ($active ?? '') === 'stats' ? 'active' : '' }}">{{ __('統計') }}</a>
     </div>
     <div class="nav-right">
