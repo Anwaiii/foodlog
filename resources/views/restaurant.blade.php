@@ -1,17 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="robots" content="noindex, nofollow" />
-  <meta name="csrf-token" content="{{ csrf_token() }}" />
-  <title>Restaurant — FoodLog</title>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122d" />
-</head>
-<body>
+@extends('layouts.app')
+@section('lang', 'en')
+@section('title', 'Restaurant — FoodLog')
 
-  @include('partials.nav', ['active' => '', 'badgeId' => 'review-count-badge'])
-
+@section('content')
   <div class="detail-header">
     <div class="detail-banner-placeholder" id="banner-placeholder" style="display:none;"></div>
     <img class="detail-banner" id="banner-img" src="" alt="" style="display:none;" />
@@ -68,12 +59,9 @@
       </div>
     </section>
   </div>
+@endsection
 
-    <footer>
-    <p>FoodLog — Data saved in MySQL database 🗄️</p>
-    <p style="margin-top:0.35rem;font-size:0.78rem;opacity:0.85;">※これは学習・ポートフォリオ用のデモサイトです。レビューや評価はすべて架空のテストデータです。</p>
-  </footer>
-
+@section('modals')
   @auth
   <!-- Add Review Modal -->
   <div class="modal-overlay" id="add-review-modal">
@@ -236,7 +224,9 @@
       <p id="photo-lightbox-caption" class="photo-lightbox-caption"></p>
     </div>
   </div>
+@endsection
 
+@section('scripts')
   <script>
     window.AUTH = {
       loggedIn: {{ Auth::check() ? 'true' : 'false' }},
@@ -246,5 +236,4 @@
   </script>
   <script src="/foodlog/assets/js/pagination.js?v=20261122a"></script>
   <script src="/foodlog/assets/js/restaurant.js?v=20261122b"></script>
-</body>
-</html>
+@endsection

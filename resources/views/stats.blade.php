@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="robots" content="noindex, nofollow" />
-  <title>Stats — FoodLog</title>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122d" />
-</head>
-<body>
+@extends('layouts.app', ['navActive' => 'stats'])
+@section('lang', 'en')
+@section('title', 'Stats — FoodLog')
 
-  @include('partials.nav', ['active' => 'stats', 'badgeId' => 'total-reviews-badge'])
-
+@section('content')
   <section class="stats-hero">
     <div class="hero-tag">📊 Dashboard</div>
     <h1>Your Food <span class="grad">Statistics</span></h1>
@@ -63,12 +55,8 @@
       <div id="ranking-list"></div>
     </div>
   </main>
+@endsection
 
-    <footer>
-    <p>FoodLog — Data saved in MySQL database 🗄️</p>
-    <p style="margin-top:0.35rem;font-size:0.78rem;opacity:0.85;">※これは学習・ポートフォリオ用のデモサイトです。レビューや評価はすべて架空のテストデータです。</p>
-  </footer>
-
+@section('scripts')
   <script src="/foodlog/assets/js/stats.js?v=20261120f"></script>
-</body>
-</html>
+@endsection

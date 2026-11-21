@@ -1,18 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="robots" content="noindex, nofollow" />
-  <meta name="csrf-token" content="{{ csrf_token() }}" />
-  <title>FoodLog — Uber Eats Review Tracker</title>
+@extends('layouts.app', ['navActive' => 'home'])
+@section('lang', 'en')
+@section('title', 'FoodLog — Uber Eats Review Tracker')
+@section('meta')
   <meta name="description" content="Track and review your Uber Eats orders." />
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122f" />
-</head>
-<body>
+@endsection
 
-  @include('partials.nav', ['active' => 'home', 'badgeId' => 'total-reviews-badge'])
-
+@section('content')
   <section class="hero">
     <div class="hero-tag">🍴 Your Personal Food Diary</div>
     <h1>Track Every <span class="grad">Delicious</span><br/>Uber Eats Order</h1>
@@ -77,12 +70,9 @@
     </div>
     <div id="home-pagination"></div>
   </main>
+@endsection
 
-    <footer>
-    <p>FoodLog — Data saved in MySQL database 🗄️</p>
-    <p style="margin-top:0.35rem;font-size:0.78rem;opacity:0.85;">※これは学習・ポートフォリオ用のデモサイトです。レビューや評価はすべて架空のテストデータです。</p>
-  </footer>
-
+@section('modals')
   @if(Auth::check() && Auth::user()->isAdmin())
   <!-- Add Restaurant Modal -->
   <div class="modal-overlay" id="add-modal">
@@ -136,7 +126,9 @@
     </div>
   </div>
   @endif
+@endsection
 
+@section('scripts')
   <script>
     window.AUTH = {
       loggedIn: {{ Auth::check() ? 'true' : 'false' }},
@@ -146,5 +138,4 @@
   </script>
   <script src="/foodlog/assets/js/pagination.js?v=20261122a"></script>
   <script src="/foodlog/assets/js/app.js?v=20261122c"></script>
-</body>
-</html>
+@endsection
