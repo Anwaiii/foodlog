@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ログアウト完了 — FoodLog</title>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122c" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122d" />
 </head>
 <body>
 
