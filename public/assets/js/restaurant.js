@@ -95,10 +95,9 @@ function renderRestaurantInfo(r) {
 function renderFavoriteButton(r) {
   const favBtn = document.getElementById('detail-fav-btn');
   if (!favBtn || !r) return;
-  const favCount = Number(r.favorites_count) || 0;
   const isFav = Boolean(r.is_favorited);
   favBtn.classList.toggle('favorited', isFav);
-  favBtn.textContent = isFav ? `❤️ お気に入り済 (${favCount})` : `🤍 お気に入り (${favCount})`;
+  favBtn.textContent = isFav ? '❤️ お気に入り済' : '🤍 お気に入り';
 
   if (!favBtn.dataset.bound) {
     favBtn.dataset.bound = '1';
@@ -120,7 +119,6 @@ function renderFavoriteButton(r) {
       if (!res.ok) return;
       const data = await res.json();
       currentRestaurant.is_favorited = data.favorited;
-      currentRestaurant.favorites_count = data.favorites_count;
       renderFavoriteButton(currentRestaurant);
     });
   }

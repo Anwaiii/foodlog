@@ -5,6 +5,9 @@
     </a>
     <div class="nav-links">
       <a href="/foodlog/" class="nav-link {{ ($active ?? '') === 'home' ? 'active' : '' }}">ホーム</a>
+      @auth
+        <a href="/foodlog/favorites" class="nav-link {{ ($active ?? '') === 'favorites' ? 'active' : '' }}">❤️ お気に入り</a>
+      @endauth
       <a href="/foodlog/stats.php" class="nav-link {{ ($active ?? '') === 'stats' ? 'active' : '' }}">統計</a>
     </div>
     <div class="nav-right">
@@ -38,6 +41,7 @@
             </div>
             <div class="menu-divider"></div>
             <a href="/foodlog/member" class="menu-item">👤 会員情報の確認</a>
+            <a href="/foodlog/favorites" class="menu-item">❤️ お気に入り一覧</a>
             <a href="/foodlog/users/{{ Auth::id() }}" class="menu-item">📖 自分のレビュー履歴</a>
             @if(Auth::user()->isAdmin())
               <a href="/foodlog/admin/members" class="menu-item">🛠️ 会員管理（管理者）</a>

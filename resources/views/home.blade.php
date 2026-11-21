@@ -53,7 +53,6 @@
           <button type="button" class="filter-chip active" data-sort="default">標準</button>
           <button type="button" class="filter-chip" data-sort="reviews">レビュー数順</button>
           <button type="button" class="filter-chip" data-sort="rating">高評価順</button>
-          <button type="button" class="filter-chip" data-sort="favorites">お気に入り順</button>
           <button type="button" class="filter-chip" data-sort="newest">新着順</button>
         </div>
       </div>
@@ -145,5 +144,5 @@
     };
   </script>
   <script src="/foodlog/assets/js/pagination.js?v=20261122b"></script>
-  <script src="/foodlog/assets/js/app.js?v=20261122d"></script>
+  <script src="/foodlog/assets/js/app.js?v=20261122e"></script>
 @endsection

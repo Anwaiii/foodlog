@@ -13,7 +13,7 @@
       <p class="detail-desc" id="detail-desc"></p>
       <p class="detail-address" id="detail-address" style="font-size:0.9rem;color:var(--muted);margin-top:0.5rem;"></p>
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1rem;align-items:center;">
-        <button type="button" class="detail-fav-btn" id="detail-fav-btn">🤍 お気に入り (0)</button>
+        <button type="button" class="detail-fav-btn" id="detail-fav-btn">🤍 お気に入り</button>
         @if(Auth::check() && Auth::user()->isAdmin())
           <button class="edit-info-btn" id="edit-info-btn">✏️ 店舗情報を編集</button>
           <button class="edit-info-btn delete-restaurant-btn" id="delete-restaurant-btn">🗑 店舗を削除</button>
@@ -236,5 +236,5 @@
     };
   </script>
   <script src="/foodlog/assets/js/pagination.js?v=20261122b"></script>
-  <script src="/foodlog/assets/js/restaurant.js?v=20261122d"></script>
+  <script src="/foodlog/assets/js/restaurant.js?v=20261122e"></script>
 @endsection

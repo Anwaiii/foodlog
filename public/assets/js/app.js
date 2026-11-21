@@ -220,14 +220,14 @@ function renderGrid(restaurants) {
   pageRestaurants.forEach((r, idx) => {
     const count = parseInt(r.reviewCount ?? r.review_count) || 0;
     const avgText = r.avgRating > 0 ? `★ ${r.avgRating.toFixed(1)}` : '評価なし';
-    const favCount = Number(r.favorites_count) || 0;
 
     const card = el('a', 'restaurant-card');
     card.href = `/foodlog/restaurant.php?id=${encodeURIComponent(r.id)}`;
 
-    const favBtn = el('button', `card-fav-btn ${r.is_favorited ? 'favorited' : ''}`.trim(), `${r.is_favorited ? '❤️' : '🤍'} ${favCount}`);
+    const favBtn = el('button', `card-fav-btn ${r.is_favorited ? 'favorited' : ''}`.trim(), r.is_favorited ? '❤️' : '🤍');
     favBtn.type = 'button';
     favBtn.title = loggedIn ? (r.is_favorited ? 'お気に入り解除' : 'お気に入り登録') : 'ログインしてお気に入り登録';
+    favBtn.setAttribute('aria-label', favBtn.title);
     favBtn.addEventListener('click', async e => {
       e.preventDefault();
       e.stopPropagation();
@@ -249,7 +249,6 @@ function renderGrid(restaurants) {
       const target = allRestaurants.find(x => String(x.id) === String(r.id));
       if (target) {
         target.is_favorited = data.favorited;
-        target.favorites_count = data.favorites_count;
       }
       renderFilteredGrid();
     });

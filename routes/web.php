@@ -45,6 +45,7 @@ $registerAppRoutes = function () {
     Route::get('/users/{id}', [MemberController::class, 'publicProfile'])->whereNumber('id')->name('users.show');
 
     Route::middleware('auth')->group(function () {
+        Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
         Route::get('/member', [MemberController::class, 'show']);
         Route::get('/member/password', [MemberController::class, 'editPassword']);
         Route::post('/member/password', [MemberController::class, 'updatePassword']);
