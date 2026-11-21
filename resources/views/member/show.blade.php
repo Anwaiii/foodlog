@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>会員情報の確認 — FoodLog</title>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261120e" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122c" />
 </head>
 <body>
 
