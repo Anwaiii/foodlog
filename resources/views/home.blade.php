@@ -6,7 +6,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>FoodLog — Uber Eats Review Tracker</title>
   <meta name="description" content="Track and review your Uber Eats orders." />
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122a" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122b" />
 </head>
 <body>
 
@@ -74,6 +74,7 @@
     <div class="restaurant-grid" id="restaurant-grid">
       <div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>
     </div>
+    <div id="home-pagination"></div>
   </main>
 
   <footer><p>FoodLog — Data saved in MySQL database 🗄️</p></footer>
@@ -139,6 +140,7 @@
       userId: {{ Auth::check() ? Auth::id() : 'null' }}
     };
   </script>
-  <script src="/foodlog/assets/js/app.js?v=20261122a"></script>
+  <script src="/foodlog/assets/js/pagination.js?v=20261122a"></script>
+  <script src="/foodlog/assets/js/app.js?v=20261122b"></script>
 </body>
 </html>

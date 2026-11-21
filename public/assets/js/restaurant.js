@@ -330,79 +330,16 @@ function renderReviews() {
     (idx % 2 === 0 ? colLeft : colRight).appendChild(item);
   });
 
-  // ページネーションUI
-  if (totalPages > 1) {
-    const nav = el('div', 'pagination');
-
-    const prevBtn = el('button', 'pagination-btn', '← Prev');
-    prevBtn.id = 'pg-prev';
-    prevBtn.type = 'button';
-    prevBtn.disabled = currentPage === 1;
-    prevBtn.addEventListener('click', () => { currentPage--; renderReviews(); });
-
-    const numbersWrap = el('div', 'pagination-numbers');
-    const appendPageNum = p => {
-      const b = el('button', `pagination-num ${currentPage === p ? 'active' : ''}`.trim(), String(p));
-      b.type = 'button';
-      b.dataset.page = String(p);
-      b.addEventListener('click', () => {
+  // 共通ページネーションUI
+  if (typeof window.renderPagination === 'function') {
+    window.renderPagination(list, {
+      currentPage,
+      totalPages,
+      onPageChange: p => {
         currentPage = p;
         renderReviews();
-      });
-      numbersWrap.appendChild(b);
-    };
-
-    appendPageNum(1);
-    const windowSize = 9;
-    let pStart = Math.max(2, currentPage - 4);
-    let pEnd = Math.min(totalPages, pStart + windowSize - 1);
-    if (pEnd - pStart + 1 < windowSize) {
-      pStart = Math.max(2, pEnd - windowSize + 1);
-    }
-    if (pStart > 2) numbersWrap.appendChild(el('span', 'pagination-ellipsis', '…'));
-    for (let p = pStart; p <= pEnd; p++) appendPageNum(p);
-    if (pEnd < totalPages) numbersWrap.appendChild(el('span', 'pagination-ellipsis', '…'));
-
-    const nextBtn = el('button', 'pagination-btn', 'Next →');
-    nextBtn.id = 'pg-next';
-    nextBtn.type = 'button';
-    nextBtn.disabled = currentPage === totalPages;
-    nextBtn.addEventListener('click', () => { currentPage++; renderReviews(); });
-
-    const jumpWrap = el('div', 'pagination-jump');
-    const jumpInput = el('input', 'pagination-input');
-    jumpInput.type = 'text';
-    jumpInput.inputMode = 'numeric';
-    jumpInput.id = 'pg-jump-input';
-    jumpInput.placeholder = `1-${totalPages}`;
-    jumpInput.setAttribute('aria-label', 'ページ番号');
-    jumpInput.title = `1〜${totalPages}の数字を入力してEnter`;
-
-    jumpInput.addEventListener('input', () => {
-      let val = jumpInput.value
-        .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
-        .replace(/[^0-9]/g, '')
-        .replace(/^0+/, '');
-      if (val !== '') {
-        const num = parseInt(val, 10);
-        if (num > totalPages) val = String(totalPages);
-      }
-      jumpInput.value = val;
+      },
     });
-    jumpInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const num = parseInt(jumpInput.value, 10);
-        if (num >= 1 && num <= totalPages) {
-          currentPage = num;
-          renderReviews();
-        }
-      }
-    });
-
-    jumpWrap.append(jumpInput, el('span', 'pagination-total', `/ ${totalPages}`));
-    nav.append(prevBtn, numbersWrap, nextBtn, jumpWrap);
-    list.appendChild(nav);
   }
 }
 

@@ -5,8 +5,10 @@ const GRADIENTS = [
   'linear-gradient(135deg, #0d1a00 0%, #3a5e00 100%)',
 ];
 
+const RESTAURANTS_PER_PAGE = 10;
 let allRestaurants = [];
 let allReviewsMap = {}; // { restaurantId: [reviews] }
+let homeCurrentPage = 1;
 const homeFilters = {
   query: '',
   category: 'all',
@@ -145,6 +147,7 @@ function resetHomeFilters() {
   homeFilters.category = 'all';
   homeFilters.minRating = 0;
   homeFilters.sort = 'default';
+  homeCurrentPage = 1;
 
   const searchInput = document.getElementById('search-input');
   if (searchInput) searchInput.value = '';
@@ -162,7 +165,9 @@ function renderFilteredGrid() {
 
 function renderGrid(restaurants) {
   const grid = document.getElementById('restaurant-grid');
+  const pgContainer = document.getElementById('home-pagination');
   grid.replaceChildren();
+  if (pgContainer) pgContainer.replaceChildren();
 
   const countEl = document.getElementById('restaurant-count');
   const isFiltered = homeFilters.query || homeFilters.category !== 'all' || homeFilters.minRating > 0;
@@ -192,9 +197,15 @@ function renderGrid(restaurants) {
     return;
   }
 
+  const totalPages = Math.max(1, Math.ceil(restaurants.length / RESTAURANTS_PER_PAGE));
+  if (homeCurrentPage > totalPages) homeCurrentPage = totalPages;
+  if (homeCurrentPage < 1) homeCurrentPage = 1;
+  const start = (homeCurrentPage - 1) * RESTAURANTS_PER_PAGE;
+  const pageRestaurants = restaurants.slice(start, start + RESTAURANTS_PER_PAGE);
+
   const isAdmin = Boolean(window.AUTH && window.AUTH.isAdmin);
 
-  restaurants.forEach((r, idx) => {
+  pageRestaurants.forEach((r, idx) => {
     const count = parseInt(r.reviewCount ?? r.review_count) || 0;
     const avgText = r.avgRating > 0 ? `★ ${r.avgRating.toFixed(1)}` : 'No rating';
 
@@ -268,6 +279,17 @@ function renderGrid(restaurants) {
     card.appendChild(body);
     grid.appendChild(card);
   });
+
+  if (pgContainer && typeof window.renderPagination === 'function') {
+    window.renderPagination(pgContainer, {
+      currentPage: homeCurrentPage,
+      totalPages,
+      onPageChange: p => {
+        homeCurrentPage = p;
+        renderFilteredGrid();
+      },
+    });
+  }
 }
 
 // ─── 検索・フィルターイベント登録 ──────────────────────────────────────────────
@@ -276,6 +298,7 @@ function setupHomeFilters() {
   if (searchInput && !searchInput.dataset.bound) {
     searchInput.addEventListener('input', e => {
       homeFilters.query = e.target.value.trim();
+      homeCurrentPage = 1;
       renderFilteredGrid();
     });
     searchInput.dataset.bound = '1';
@@ -289,6 +312,7 @@ function setupHomeFilters() {
       catChips.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       homeFilters.category = btn.dataset.category;
+      homeCurrentPage = 1;
       renderFilteredGrid();
     });
     catChips.dataset.bound = '1';
@@ -302,6 +326,7 @@ function setupHomeFilters() {
       ratingChips.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       homeFilters.minRating = Number(btn.dataset.rating);
+      homeCurrentPage = 1;
       renderFilteredGrid();
     });
     ratingChips.dataset.bound = '1';
@@ -315,6 +340,7 @@ function setupHomeFilters() {
       sortChips.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       homeFilters.sort = btn.dataset.sort;
+      homeCurrentPage = 1;
       renderFilteredGrid();
     });
     sortChips.dataset.bound = '1';

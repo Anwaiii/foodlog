@@ -240,6 +240,7 @@
       userId: {{ Auth::check() ? Auth::id() : 'null' }}
     };
   </script>
-  <script src="/foodlog/assets/js/restaurant.js?v=20261121c"></script>
+  <script src="/foodlog/assets/js/pagination.js?v=20261122a"></script>
+  <script src="/foodlog/assets/js/restaurant.js?v=20261122a"></script>
 </body>
 </html>
