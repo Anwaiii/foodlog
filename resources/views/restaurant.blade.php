@@ -137,9 +137,9 @@
         <div class="form-group">
           <label for="edit-category">
             Category
-            <span class="char-count" id="edit-category-count">0 / 200</span>
+            <span class="char-count" id="edit-category-count">0 / 30</span>
           </label>
-          <input type="text" id="edit-category" name="category" maxlength="200" required />
+          <input type="text" id="edit-category" name="category" maxlength="30" required />
         </div>
         <div class="form-group">
           <label for="edit-desc">

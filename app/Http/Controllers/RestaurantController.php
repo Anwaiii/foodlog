@@ -71,7 +71,7 @@ class RestaurantController extends Controller
 
         $validated = $request->validate([
             'name'        => 'required|string|max:50',
-            'category'    => 'required|string|max:200',
+            'category'    => 'required|string|max:30',
             'description' => 'nullable|string|max:200',
             'address'     => 'nullable|string|max:100',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
@@ -101,7 +101,7 @@ class RestaurantController extends Controller
 
         $validated = $request->validate([
             'name'        => 'required|string|max:50',
-            'category'    => 'required|string|max:200',
+            'category'    => 'required|string|max:30',
             'description' => 'nullable|string|max:200',
             'address'     => 'nullable|string|max:100',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',

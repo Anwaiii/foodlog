@@ -37,7 +37,7 @@
       <div class="stats-card">
         <div class="stats-card-icon">📅</div>
         <div class="stats-card-val" id="s-latest">—</div>
-        <div class="stats-card-label">Last Order</div>
+        <div class="stats-card-label">Last Review</div>
       </div>
     </div>
 

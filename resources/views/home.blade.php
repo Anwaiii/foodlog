@@ -27,7 +27,7 @@
       </div>
       <div>
         <div class="stat-val" id="stat-latest">—</div>
-        <div class="stat-label">Last Order</div>
+        <div class="stat-label">Last Review</div>
       </div>
     </div>
   </section>
@@ -95,9 +95,9 @@
         <div class="form-group">
           <label for="r-category">
             Category
-            <span class="char-count" id="r-category-count">0 / 200</span>
+            <span class="char-count" id="r-category-count">0 / 30</span>
           </label>
-          <input type="text" id="r-category" name="category" placeholder="e.g. Japanese, Burgers…" maxlength="200" required />
+          <input type="text" id="r-category" name="category" placeholder="e.g. Japanese, Burgers…" maxlength="30" required />
         </div>
         <div class="form-group">
           <label for="r-desc">
