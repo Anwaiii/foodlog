@@ -11,7 +11,7 @@
 </head>
 <body>
 
-  @include('partials.nav', ['active' => $navActive ?? ''])
+  @include('partials.header', ['active' => $navActive ?? ''])
 
   @yield('content')
 

@@ -1,14 +1,14 @@
 @extends('layouts.app', ['navActive' => 'home'])
 @section('lang', 'en')
-@section('title', 'FoodLog — Uber Eats Review Tracker')
+@section('title', 'FoodLog — Restaurant Review Tracker')
 @section('meta')
-  <meta name="description" content="Track and review your Uber Eats orders." />
+  <meta name="description" content="Track and review your favourite restaurants and meals." />
 @endsection
 
 @section('content')
   <section class="hero">
     <div class="hero-tag">🍴 Your Personal Food Diary</div>
-    <h1>Track Every <span class="grad">Delicious</span><br/>Uber Eats Order</h1>
+    <h1>Track Every <span class="grad">Delicious</span><br/>Restaurant Meal</h1>
     <p>Keep a personal log of your favourite restaurants, dishes, and honest impressions — saved permanently in a database.</p>
     <div class="hero-stats">
       <div>
