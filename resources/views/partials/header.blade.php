@@ -43,6 +43,7 @@
             </form>
           @else
             <a href="/foodlog/login" class="menu-item">🔑 ログイン</a>
+            <a href="/foodlog/register" class="menu-item">✨ 新規会員登録</a>
           @endauth
         </div>
       </div>

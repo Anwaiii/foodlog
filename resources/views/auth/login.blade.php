@@ -41,7 +41,8 @@
         </button>
       </form>
 
-      <div class="auth-footer">
+      <div class="auth-footer" style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;">
+        <a href="/foodlog/register" class="back-link">✨ アカウントをお持ちでない方はこちら（新規会員登録）</a>
         <a href="/foodlog/" class="back-link">← ホーム画面に戻る</a>
       </div>
     </div>
