@@ -1,4 +1,4 @@
-﻿  <nav class="nav">
+  <nav class="nav">
     <a href="/foodlog/" class="nav-brand">
       <span class="logo-icon">🍜</span>
       <span>FoodLog</span>
