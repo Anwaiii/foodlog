@@ -56,7 +56,7 @@ function renderMonthlyChart(reviews) {
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const label = d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    const label = `${d.getFullYear()}年${d.getMonth() + 1}月`;
     months.push({ key, label, count: 0 });
   }
 
@@ -133,7 +133,7 @@ function renderRanking(restaurants, reviews) {
 
   if (top.length === 0) {
     const empty = el('div', 'reviews-empty');
-    empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'No reviews yet.'));
+    empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'まだレビューがありません。'));
     container.appendChild(empty);
     return;
   }
@@ -155,7 +155,7 @@ function renderRanking(restaurants, reviews) {
     const info = el('div', 'ranking-info');
     info.append(
       el('div', 'ranking-name', r.name || ''),
-      el('div', 'ranking-meta', `★ ${r.avg.toFixed(1)}\u00A0\u00A0\u00A0${r.reviewCount} reviews`)
+      el('div', 'ranking-meta', `★ ${r.avg.toFixed(1)}\u00A0\u00A0\u00A0${r.reviewCount}件のレビュー`)
     );
 
     link.append(

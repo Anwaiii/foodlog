@@ -88,6 +88,42 @@ function renderRestaurantInfo(r) {
     bannerImg.style.display = 'none';
     showPlaceholder(idx);
   }
+
+  renderFavoriteButton(r);
+}
+
+function renderFavoriteButton(r) {
+  const favBtn = document.getElementById('detail-fav-btn');
+  if (!favBtn || !r) return;
+  const favCount = Number(r.favorites_count) || 0;
+  const isFav = Boolean(r.is_favorited);
+  favBtn.classList.toggle('favorited', isFav);
+  favBtn.textContent = isFav ? `❤️ お気に入り済 (${favCount})` : `🤍 お気に入り (${favCount})`;
+
+  if (!favBtn.dataset.bound) {
+    favBtn.dataset.bound = '1';
+    favBtn.addEventListener('click', async () => {
+      const loggedIn = Boolean(window.AUTH && window.AUTH.loggedIn);
+      if (!loggedIn) {
+        if (confirm('お気に入り登録にはログインが必要です。ログイン画面へ移動しますか？')) {
+          location.href = '/foodlog/login';
+        }
+        return;
+      }
+      favBtn.disabled = true;
+      const res = await fetch('/foodlog/api/favorites.php', {
+        method: 'POST',
+        headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurant_id: currentRestaurant.id }),
+      });
+      favBtn.disabled = false;
+      if (!res.ok) return;
+      const data = await res.json();
+      currentRestaurant.is_favorited = data.favorited;
+      currentRestaurant.favorites_count = data.favorites_count;
+      renderFavoriteButton(currentRestaurant);
+    });
+  }
 }
 
 function showPlaceholder(idx) {
@@ -177,6 +213,9 @@ function getFilteredAndSortedReviews() {
     const idA   = Number(a.id || 0);
     const idB   = Number(b.id || 0);
 
+    const likesA = Number(a.likes_count || 0);
+    const likesB = Number(b.likes_count || 0);
+
     switch (reviewFilters.sort) {
       case 'date_asc':
         return dateA.localeCompare(dateB) || (idA - idB);
@@ -184,6 +223,8 @@ function getFilteredAndSortedReviews() {
         return (rateB - rateA) || dateB.localeCompare(dateA) || (idB - idA);
       case 'rating_asc':
         return (rateA - rateB) || dateB.localeCompare(dateA) || (idB - idA);
+      case 'likes_desc':
+        return (likesB - likesA) || dateB.localeCompare(dateA) || (idB - idA);
       case 'date_desc':
       default:
         return dateB.localeCompare(dateA) || (idB - idA);
@@ -210,11 +251,11 @@ function renderReviews() {
   const badge = document.getElementById('review-count-badge');
   if (badge) {
     if (!allTotal) {
-      badge.textContent = '0 Reviews';
+      badge.textContent = '0件';
     } else if (filteredActive) {
-      badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${total} / ${allTotal} Reviews`;
+      badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${total} / ${allTotal}件`;
     } else {
-      badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${allTotal} Reviews`;
+      badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${allTotal}件`;
     }
   }
 
@@ -227,7 +268,7 @@ function renderReviews() {
 
   if (!allTotal) {
     const empty = el('div', 'reviews-empty');
-    empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'No reviews yet.'));
+    empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'まだレビューがありません。'));
     list.appendChild(empty);
     return;
   }
@@ -256,9 +297,8 @@ function renderReviews() {
 
   pageReviews.forEach((rv, idx) => {
     const stars = rv.rating ? '⭐'.repeat(Number(rv.rating)) : '';
-    const formatted = new Date(rv.date + 'T00:00:00').toLocaleDateString('en-US', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
+    const dObj = new Date(rv.date + 'T00:00:00');
+    const formatted = `${dObj.getFullYear()}/${String(dObj.getMonth() + 1).padStart(2, '0')}/${String(dObj.getDate()).padStart(2, '0')}`;
 
     const isOwner = loggedIn && userId !== null && rv.member_id !== null && Number(rv.member_id) === Number(userId);
     const canEdit = isOwner;
@@ -333,6 +373,36 @@ function renderReviews() {
     const impEl = el('div', 'review-impression');
     appendTextWithBreaks(impEl, rv.impression);
     item.appendChild(impEl);
+
+    const rvFooter = el('div', 'review-footer');
+    const likeCount = Number(rv.likes_count || 0);
+    const isLiked = Boolean(rv.is_liked);
+    const likeBtn = el('button', `review-like-btn ${isLiked ? 'liked' : ''}`.trim(), `👍 役に立った (${likeCount})`);
+    likeBtn.type = 'button';
+    likeBtn.title = loggedIn ? (isLiked ? '取り消す' : '役に立った！') : 'ログインして「役に立った」を押せます';
+    likeBtn.addEventListener('click', async () => {
+      if (!loggedIn) {
+        if (confirm('「役に立った」を押すにはログインが必要です。ログイン画面へ移動しますか？')) {
+          location.href = '/foodlog/login';
+        }
+        return;
+      }
+      likeBtn.disabled = true;
+      const res = await fetch('/foodlog/api/review-likes.php', {
+        method: 'POST',
+        headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ review_id: rv.id }),
+      });
+      likeBtn.disabled = false;
+      if (!res.ok) return;
+      const data = await res.json();
+      rv.is_liked = data.liked;
+      rv.likes_count = data.likes_count;
+      likeBtn.classList.toggle('liked', rv.is_liked);
+      likeBtn.textContent = `👍 役に立った (${rv.likes_count})`;
+    });
+    rvFooter.appendChild(likeBtn);
+    item.appendChild(rvFooter);
 
     (idx % 2 === 0 ? colLeft : colRight).appendChild(item);
   });

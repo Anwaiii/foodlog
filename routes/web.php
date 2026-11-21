@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\AdminMemberController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ReviewLikeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +48,10 @@ $registerAppRoutes = function () {
         Route::get('/member', [MemberController::class, 'show']);
         Route::get('/member/password', [MemberController::class, 'editPassword']);
         Route::post('/member/password', [MemberController::class, 'updatePassword']);
+
+        // 管理者専用：会員管理
+        Route::get('/admin/members', [AdminMemberController::class, 'index'])->name('admin.members');
+        Route::post('/admin/members/{id}/toggle-status', [AdminMemberController::class, 'toggleStatus'])->whereNumber('id');
     });
 
     // API互換ルート（web経由の /foodlog/api/... リクエスト対応）
@@ -85,6 +92,11 @@ $registerAppRoutes = function () {
         Route::post('/reviews', [ReviewController::class, 'store']);
         Route::post('/reviews/{id}', [ReviewController::class, 'update']);
         Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
+
+        Route::post('/favorites.php', [FavoriteController::class, 'toggle']);
+        Route::post('/favorites', [FavoriteController::class, 'toggle']);
+        Route::post('/review-likes.php', [ReviewLikeController::class, 'toggle']);
+        Route::post('/review-likes', [ReviewLikeController::class, 'toggle']);
     });
 };
 

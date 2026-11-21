@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Favorite;
 use App\Models\Restaurant;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -30,17 +31,22 @@ class RestaurantController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $userFavIds = Auth::check()
+            ? Favorite::where('member_id', Auth::id())->pluck('restaurant_id')->flip()->all()
+            : [];
+
         $restaurants = Restaurant::query()
-            ->withCount('reviews')
+            ->withCount(['reviews', 'favorites'])
             ->withAvg('reviews as avg_rating', 'rating')
             ->withMax('reviews as latest_date', 'date')
             ->orderBy('created_at', 'ASC')
             ->get()
-            ->map(function ($r) {
-                // 旧コード互換の review_count (エイリアス)
+            ->map(function ($r) use ($userFavIds) {
                 $data = $r->toArray();
-                $data['review_count'] = $r->reviews_count;
-                $data['avg_rating'] = $r->avg_rating ? round((float)$r->avg_rating, 1) : 0;
+                $data['review_count']    = $r->reviews_count;
+                $data['avg_rating']      = $r->avg_rating ? round((float)$r->avg_rating, 1) : 0;
+                $data['favorites_count'] = $r->favorites_count;
+                $data['is_favorited']    = isset($userFavIds[$r->id]);
                 return $data;
             });
 
@@ -50,7 +56,8 @@ class RestaurantController extends Controller
     public function show(int $id): JsonResponse
     {
         $restaurant = Restaurant::query()
-            ->withCount('reviews')
+            ->withCount(['reviews', 'favorites'])
+            ->withAvg('reviews as avg_rating', 'rating')
             ->withMax('reviews as latest_date', 'date')
             ->where('id', $id)
             ->first();
@@ -60,7 +67,12 @@ class RestaurantController extends Controller
         }
 
         $data = $restaurant->toArray();
-        $data['review_count'] = $restaurant->reviews_count;
+        $data['review_count']    = $restaurant->reviews_count;
+        $data['avg_rating']      = $restaurant->avg_rating ? round((float)$restaurant->avg_rating, 1) : 0;
+        $data['favorites_count'] = $restaurant->favorites_count;
+        $data['is_favorited']    = Auth::check()
+            ? Favorite::where('member_id', Auth::id())->where('restaurant_id', $restaurant->id)->exists()
+            : false;
 
         return response()->json($data);
     }

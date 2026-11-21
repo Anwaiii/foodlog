@@ -4,10 +4,11 @@
       <span>FoodLog</span>
     </a>
     <div class="nav-links">
-      <a href="/foodlog/" class="nav-link {{ ($active ?? '') === 'home' ? 'active' : '' }}">Home</a>
-      <a href="/foodlog/stats.php" class="nav-link {{ ($active ?? '') === 'stats' ? 'active' : '' }}">Stats</a>
+      <a href="/foodlog/" class="nav-link {{ ($active ?? '') === 'home' ? 'active' : '' }}">ホーム</a>
+      <a href="/foodlog/stats.php" class="nav-link {{ ($active ?? '') === 'stats' ? 'active' : '' }}">統計</a>
     </div>
     <div class="nav-right">
+      <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" title="ライト / ダークモード切替" aria-label="テーマ切替">🌙</button>
       @auth
         <a href="/foodlog/member" class="nav-user-pill" title="会員情報の確認">
           <span>{{ Auth::user()->isAdmin() ? '👑' : '👤' }}</span>
@@ -20,7 +21,7 @@
         </a>
       @endauth
       <div class="hamburger-wrapper" id="hamburger-wrapper">
-        <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu" aria-expanded="false">
+        <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="メニュー" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
         <div class="hamburger-menu" id="hamburger-menu">
@@ -37,6 +38,11 @@
             </div>
             <div class="menu-divider"></div>
             <a href="/foodlog/member" class="menu-item">👤 会員情報の確認</a>
+            <a href="/foodlog/users/{{ Auth::id() }}" class="menu-item">📖 自分のレビュー履歴</a>
+            @if(Auth::user()->isAdmin())
+              <a href="/foodlog/admin/members" class="menu-item">🛠️ 会員管理（管理者）</a>
+            @endif
+            <div class="menu-divider"></div>
             <form method="POST" action="/foodlog/logout" style="margin:0;">
               @csrf
               <button type="submit" class="menu-item menu-logout">🚪 ログアウト</button>
@@ -54,19 +60,42 @@
       const btn = document.getElementById('hamburger-btn');
       const menu = document.getElementById('hamburger-menu');
       const wrapper = document.getElementById('hamburger-wrapper');
-      if (!btn || !menu) return;
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        const isOpen = menu.classList.toggle('open');
-        btn.classList.toggle('open', isOpen);
-        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      });
-      document.addEventListener('click', function (e) {
-        if (wrapper && !wrapper.contains(e.target)) {
-          menu.classList.remove('open');
-          btn.classList.remove('open');
-          btn.setAttribute('aria-expanded', 'false');
-        }
-      });
+      if (btn && menu) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const isOpen = menu.classList.toggle('open');
+          btn.classList.toggle('open', isOpen);
+          btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+        document.addEventListener('click', function (e) {
+          if (wrapper && !wrapper.contains(e.target)) {
+            menu.classList.remove('open');
+            btn.classList.remove('open');
+            btn.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+
+      const themeBtn = document.getElementById('theme-toggle-btn');
+      function syncThemeIcon() {
+        if (!themeBtn) return;
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        themeBtn.textContent = isLight ? '☀️' : '🌙';
+        themeBtn.title = isLight ? 'ダークモードへ切替' : 'ライトモードへ切替';
+      }
+      syncThemeIcon();
+      if (themeBtn) {
+        themeBtn.addEventListener('click', function () {
+          const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+          if (isLight) {
+            document.documentElement.removeAttribute('data-theme');
+            try { localStorage.setItem('foodlog_theme', 'dark'); } catch (e) {}
+          } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            try { localStorage.setItem('foodlog_theme', 'light'); } catch (e) {}
+          }
+          syncThemeIcon();
+        });
+      }
     })();
   </script>

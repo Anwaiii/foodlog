@@ -19,7 +19,7 @@
 
     const nav = pgEl('div', 'pagination');
 
-    const prevBtn = pgEl('button', 'pagination-btn', '← Prev');
+    const prevBtn = pgEl('button', 'pagination-btn', '← 前へ');
     prevBtn.id = 'pg-prev';
     prevBtn.type = 'button';
     prevBtn.disabled = currentPage === 1;
@@ -45,7 +45,7 @@
     for (let p = pStart; p <= pEnd; p++) appendPageNum(p);
     if (pEnd < totalPages) numbersWrap.appendChild(pgEl('span', 'pagination-ellipsis', '…'));
 
-    const nextBtn = pgEl('button', 'pagination-btn', 'Next →');
+    const nextBtn = pgEl('button', 'pagination-btn', '次へ →');
     nextBtn.id = 'pg-next';
     nextBtn.type = 'button';
     nextBtn.disabled = currentPage === totalPages;

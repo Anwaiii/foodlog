@@ -16,6 +16,47 @@
   --radius: 16px;
 }
 
+:root[data-theme="light"] {
+  --bg: #f5f7fb;
+  --bg2: #ffffff;
+  --bg3: #ebeff7;
+  --card: #ffffff;
+  --border: rgba(15,23,42,0.12);
+  --text: #111827;
+  --muted: #4b5563;
+}
+:root[data-theme="light"] .nav {
+  background: rgba(255,255,255,0.9);
+}
+:root[data-theme="light"] .hero {
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,107,53,0.12) 0%, transparent 70%);
+}
+:root[data-theme="light"] .detail-overlay {
+  background: linear-gradient(to top, rgba(245,247,251,0.98) 0%, rgba(245,247,251,0.72) 55%, rgba(245,247,251,0.25) 100%);
+}
+:root[data-theme="light"] .hamburger-menu,
+:root[data-theme="light"] .modal,
+:root[data-theme="light"] .auth-card {
+  box-shadow: 0 12px 32px rgba(15,23,42,0.12);
+}
+:root[data-theme="light"] .alert-success {
+  background: rgba(22,163,74,0.1);
+  color: #15803d;
+}
+:root[data-theme="light"] .alert-error {
+  background: rgba(220,38,38,0.08);
+  color: #b91c1c;
+}
+:root[data-theme="light"] .review-author {
+  background: rgba(15,23,42,0.06);
+}
+:root[data-theme="light"] .nav-link:hover {
+  background: rgba(15,23,42,0.06);
+}
+:root[data-theme="light"] .nav-user-pill.guest {
+  background: rgba(15,23,42,0.05);
+}
+
 html {
   scroll-behavior: smooth;
   overflow-y: scroll;
@@ -119,6 +160,7 @@ body {
 
 /* CARD */
 .restaurant-card {
+  position: relative;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -921,6 +963,180 @@ footer {
   text-align: center;
   max-width: 80vw;
   word-break: break-word;
+}
+
+/* THEME TOGGLE */
+.theme-toggle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, transform 0.2s, background 0.2s;
+}
+.theme-toggle-btn:hover {
+  border-color: var(--accent);
+  transform: scale(1.06);
+}
+
+/* FAVORITE BUTTONS */
+.card-fav-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(10,10,15,0.72);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.2s, background 0.2s;
+}
+.card-fav-btn:hover {
+  transform: scale(1.05);
+  border-color: #fb7185;
+}
+.card-fav-btn.favorited {
+  background: rgba(225,29,72,0.88);
+  border-color: #fb7185;
+}
+.detail-fav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.05rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+}
+.detail-fav-btn:hover {
+  border-color: #fb7185;
+  transform: translateY(-1px);
+}
+.detail-fav-btn.favorited {
+  background: rgba(225,29,72,0.18);
+  border-color: #fb7185;
+  color: #fb7185;
+}
+
+/* REVIEW HELPFUL LIKE BUTTON */
+.review-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
+}
+.review-like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.review-like-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.review-like-btn.liked {
+  background: rgba(255,107,53,0.16);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.review-like-btn:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+/* ADMIN MEMBERS TABLE (SCR-13) */
+.admin-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+.admin-table th,
+.admin-table td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.admin-table th {
+  background: var(--bg2);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr.is-disabled td { opacity: 0.58; }
+.status-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.status-badge.active {
+  background: rgba(34,197,94,0.15);
+  color: #22c55e;
+}
+.status-badge.disabled {
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+}
+.admin-action-btn {
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.admin-action-btn:hover {
+  border-color: var(--accent);
+  background: rgba(255,107,53,0.14);
+}
+.admin-action-btn.danger:hover {
+  border-color: #ef4444;
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
 }
 
 

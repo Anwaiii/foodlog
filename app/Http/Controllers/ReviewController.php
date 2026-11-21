@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Review;
+use App\Models\ReviewLike;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -24,14 +25,21 @@ class ReviewController extends Controller
             return response()->json(['error' => 'restaurant_id required'], 400);
         }
 
+        $userLikedIds = Auth::check()
+            ? ReviewLike::where('member_id', Auth::id())->pluck('review_id')->flip()->all()
+            : [];
+
         $reviews = Review::with('member:id,nickname')
+            ->withCount('likes')
             ->where('restaurant_id', $restaurantId)
             ->orderBy('date', 'DESC')
             ->orderBy('created_at', 'DESC')
             ->get()
-            ->map(function ($rv) {
+            ->map(function ($rv) use ($userLikedIds) {
                 $data = $rv->toArray();
                 $data['member_nickname'] = $rv->member?->nickname;
+                $data['likes_count']     = $rv->likes_count;
+                $data['is_liked']        = isset($userLikedIds[$rv->id]);
                 unset($data['member']);
                 return $data;
             });

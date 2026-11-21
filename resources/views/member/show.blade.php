@@ -51,8 +51,9 @@
         </div>
       </div>
 
-      <div class="modal-actions" style="margin-top:1.8rem;">
+      <div class="modal-actions" style="margin-top:1.8rem;flex-wrap:wrap;">
         <a href="/foodlog/" class="btn-cancel" style="text-decoration:none;text-align:center;">ホームへ戻る</a>
+        <a href="/foodlog/users/{{ $member->id }}" class="btn-cancel" style="text-decoration:none;text-align:center;">📖 自分のレビュー履歴</a>
         <a href="/foodlog/member/password" class="btn-submit" style="text-decoration:none;text-align:center;">🔒 パスワード変更</a>
       </div>
     </div>

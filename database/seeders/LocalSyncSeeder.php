@@ -20,6 +20,8 @@ class LocalSyncSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
         // 前回のエラーでテーブル定義が消えたり型が変わっていた場合に備えて正規スキーマで再作成
+        Schema::dropIfExists('review_likes');
+        Schema::dropIfExists('favorites');
         Schema::dropIfExists('reviews');
         Schema::dropIfExists('restaurants');
         Schema::dropIfExists('members');
@@ -58,6 +60,22 @@ class LocalSyncSeeder extends Seeder
             $table->tinyInteger('rating')->nullable();
             $table->string('image', 255)->nullable();
             $table->timestamp('created_at')->useCurrent();
+        });
+
+        Schema::create('favorites', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('member_id')->constrained('members')->onDelete('cascade');
+            $table->foreignId('restaurant_id')->constrained('restaurants')->onDelete('cascade');
+            $table->timestamp('created_at')->useCurrent();
+            $table->unique(['member_id', 'restaurant_id'], 'favorites_member_restaurant_unique');
+        });
+
+        Schema::create('review_likes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('member_id')->constrained('members')->onDelete('cascade');
+            $table->foreignId('review_id')->constrained('reviews')->onDelete('cascade');
+            $table->timestamp('created_at')->useCurrent();
+            $table->unique(['member_id', 'review_id'], 'review_likes_member_review_unique');
         });
 
         DB::unprepared(file_get_contents($sqlPath));

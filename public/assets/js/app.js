@@ -14,6 +14,7 @@ const homeFilters = {
   category: 'all',
   minRating: 0,
   sort: 'default',
+  favOnly: false,
 };
 
 function csrfHeaders() {
@@ -75,7 +76,7 @@ function buildCategoryChips(restaurants) {
   if (!container) return;
   container.replaceChildren();
 
-  const allBtn = el('button', `filter-chip ${homeFilters.category === 'all' ? 'active' : ''}`.trim(), 'All');
+  const allBtn = el('button', `filter-chip ${homeFilters.category === 'all' ? 'active' : ''}`.trim(), 'すべて');
   allBtn.type = 'button';
   allBtn.dataset.category = 'all';
   container.appendChild(allBtn);
@@ -124,12 +125,19 @@ function getFilteredRestaurants() {
     results = results.filter(r => r.avgRating >= homeFilters.minRating);
   }
 
+  if (homeFilters.favOnly) {
+    results = results.filter(r => Boolean(r.is_favorited));
+  }
+
   switch (homeFilters.sort) {
     case 'reviews':
       results.sort((a, b) => b.reviewCount - a.reviewCount);
       break;
     case 'rating':
-      results.sort((a, b) => b.avgRating - a.avgRating);
+      results.sort((a, b) => (b.avgRating - a.avgRating) || (b.reviewCount - a.reviewCount));
+      break;
+    case 'favorites':
+      results.sort((a, b) => ((Number(b.favorites_count) || 0) - (Number(a.favorites_count) || 0)) || (b.avgRating - a.avgRating));
       break;
     case 'newest':
       results.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -147,6 +155,7 @@ function resetHomeFilters() {
   homeFilters.category = 'all';
   homeFilters.minRating = 0;
   homeFilters.sort = 'default';
+  homeFilters.favOnly = false;
   homeCurrentPage = 1;
 
   const searchInput = document.getElementById('search-input');
@@ -154,6 +163,8 @@ function resetHomeFilters() {
   document.querySelectorAll('#category-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.category === 'all'));
   document.querySelectorAll('#rating-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.rating === '0'));
   document.querySelectorAll('#sort-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.sort === 'default'));
+  const favChip = document.getElementById('fav-only-chip');
+  if (favChip) { favChip.classList.remove('active'); favChip.setAttribute('aria-pressed', 'false'); }
 
   renderFilteredGrid();
 }
@@ -170,16 +181,16 @@ function renderGrid(restaurants) {
   if (pgContainer) pgContainer.replaceChildren();
 
   const countEl = document.getElementById('restaurant-count');
-  const isFiltered = homeFilters.query || homeFilters.category !== 'all' || homeFilters.minRating > 0;
+  const isFiltered = homeFilters.query || homeFilters.category !== 'all' || homeFilters.minRating > 0 || homeFilters.favOnly;
   if (countEl) {
     countEl.textContent = isFiltered
-      ? `(${restaurants.length} / ${allRestaurants.length})`
-      : `(${restaurants.length})`;
+      ? `(${restaurants.length} / ${allRestaurants.length}件)`
+      : `(${restaurants.length}件)`;
   }
 
   if (!allRestaurants.length) {
     const empty = el('div', 'empty-state');
-    empty.append(el('div', 'empty-icon', '🍽️'), el('p', '', 'No restaurants yet. Add one!'));
+    empty.append(el('div', 'empty-icon', '🍽️'), el('p', '', 'まだレストランが登録されていません。'));
     grid.appendChild(empty);
     return;
   }
@@ -187,8 +198,8 @@ function renderGrid(restaurants) {
   if (!restaurants.length) {
     const empty = el('div', 'empty-state');
     const p = el('p');
-    p.append(document.createTextNode('No restaurants found.'), el('br'), document.createTextNode('Try a different search or filter.'));
-    const resetBtn = el('button', 'filter-chip', 'Reset Filters');
+    p.append(document.createTextNode('条件に一致するレストランがありません。'), el('br'), document.createTextNode('別のキーワードや条件をお試しください。'));
+    const resetBtn = el('button', 'filter-chip', '条件をリセット');
     resetBtn.type = 'button';
     resetBtn.style.marginTop = '0.9rem';
     resetBtn.addEventListener('click', resetHomeFilters);
@@ -203,14 +214,46 @@ function renderGrid(restaurants) {
   const start = (homeCurrentPage - 1) * RESTAURANTS_PER_PAGE;
   const pageRestaurants = restaurants.slice(start, start + RESTAURANTS_PER_PAGE);
 
+  const loggedIn = Boolean(window.AUTH && window.AUTH.loggedIn);
   const isAdmin = Boolean(window.AUTH && window.AUTH.isAdmin);
 
   pageRestaurants.forEach((r, idx) => {
     const count = parseInt(r.reviewCount ?? r.review_count) || 0;
-    const avgText = r.avgRating > 0 ? `★ ${r.avgRating.toFixed(1)}` : 'No rating';
+    const avgText = r.avgRating > 0 ? `★ ${r.avgRating.toFixed(1)}` : '評価なし';
+    const favCount = Number(r.favorites_count) || 0;
 
     const card = el('a', 'restaurant-card');
     card.href = `/foodlog/restaurant.php?id=${encodeURIComponent(r.id)}`;
+
+    const favBtn = el('button', `card-fav-btn ${r.is_favorited ? 'favorited' : ''}`.trim(), `${r.is_favorited ? '❤️' : '🤍'} ${favCount}`);
+    favBtn.type = 'button';
+    favBtn.title = loggedIn ? (r.is_favorited ? 'お気に入り解除' : 'お気に入り登録') : 'ログインしてお気に入り登録';
+    favBtn.addEventListener('click', async e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!loggedIn) {
+        if (confirm('お気に入り登録にはログインが必要です。ログイン画面へ移動しますか？')) {
+          location.href = '/foodlog/login';
+        }
+        return;
+      }
+      favBtn.disabled = true;
+      const res = await fetch('/foodlog/api/favorites.php', {
+        method: 'POST',
+        headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurant_id: r.id }),
+      });
+      favBtn.disabled = false;
+      if (!res.ok) return;
+      const data = await res.json();
+      const target = allRestaurants.find(x => String(x.id) === String(r.id));
+      if (target) {
+        target.is_favorited = data.favorited;
+        target.favorites_count = data.favorites_count;
+      }
+      renderFilteredGrid();
+    });
+    card.appendChild(favBtn);
 
     const gradient = GRADIENTS[idx % GRADIENTS.length];
     const placeholder = el('div', 'card-image-placeholder', '🍽️');
@@ -274,7 +317,7 @@ function renderGrid(restaurants) {
     const footer = el('div', 'card-footer');
     const reviewCountEl = el('div', 'review-count');
     const strong = el('strong', '', String(count));
-    reviewCountEl.append(strong, document.createTextNode((count === 1 ? ' review' : ' reviews') + `  ·  ${avgText}`));
+    reviewCountEl.append(strong, document.createTextNode(`件のレビュー  ·  ${avgText}`));
     footer.append(reviewCountEl, el('div', 'card-arrow', '→'));
     body.appendChild(footer);
 
@@ -346,6 +389,18 @@ function setupHomeFilters() {
       renderFilteredGrid();
     });
     sortChips.dataset.bound = '1';
+  }
+
+  const favChip = document.getElementById('fav-only-chip');
+  if (favChip && !favChip.dataset.bound) {
+    favChip.addEventListener('click', () => {
+      homeFilters.favOnly = !homeFilters.favOnly;
+      favChip.classList.toggle('active', homeFilters.favOnly);
+      favChip.setAttribute('aria-pressed', String(homeFilters.favOnly));
+      homeCurrentPage = 1;
+      renderFilteredGrid();
+    });
+    favChip.dataset.bound = '1';
   }
 }
 

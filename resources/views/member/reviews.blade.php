@@ -3,20 +3,20 @@
 
 @section('content')
   <section class="stats-hero">
-    <div class="hero-tag">{{ $isAdmin ? '👑 Admin' : '👤 Member' }} Reviews</div>
+    <div class="hero-tag">{{ $isAdmin ? '👑 管理者' : '👤 会員' }} レビュー履歴</div>
     <h1>{{ $nickname }} <span class="grad">のレビュー履歴</span></h1>
     <div class="hero-stats" style="margin-top:1.5rem;">
       <div>
         <div class="stat-val">{{ $totalReviews }}</div>
-        <div class="stat-label">Total Reviews</div>
+        <div class="stat-label">総レビュー数</div>
       </div>
       <div>
         <div class="stat-val">{{ $restaurantCount }}</div>
-        <div class="stat-label">Restaurants</div>
+        <div class="stat-label">訪問店舗数</div>
       </div>
       <div>
         <div class="stat-val">{{ $avgRating !== null ? '★ ' . number_format($avgRating, 1) : '—' }}</div>
-        <div class="stat-label">Avg Rating</div>
+        <div class="stat-label">平均評価</div>
       </div>
     </div>
     <div style="margin-top:1.4rem;">
@@ -31,11 +31,20 @@
           <h2 style="margin-bottom:0;">📖 投稿レビュー一覧</h2>
           <span class="badge" id="user-review-badge">
             @if($totalReviews > 0 && $avgRating !== null)
-              ★ {{ number_format($avgRating, 1) }}&nbsp;&nbsp;&nbsp;&nbsp;{{ $totalReviews }} Reviews
+              ★ {{ number_format($avgRating, 1) }}&nbsp;&nbsp;&nbsp;&nbsp;{{ $totalReviews }}件
             @else
-              {{ $totalReviews }} Reviews
+              {{ $totalReviews }}件
             @endif
           </span>
+        </div>
+        <div class="reviews-toolbar">
+          <select id="user-review-sort" class="review-control" aria-label="並び替え">
+            <option value="date_desc">📅 新しい順</option>
+            <option value="date_asc">📅 古い順</option>
+            <option value="rating_desc">⭐ 星が高い順</option>
+            <option value="rating_asc">⭐ 星が低い順</option>
+          </select>
+          <input type="search" id="user-review-keyword" class="review-search-input" placeholder="🔍 店舗・感想を検索..." aria-label="キーワード検索" />
         </div>
       </div>
       <div id="user-reviews-list"></div>
@@ -48,19 +57,21 @@
   <div class="modal-overlay" id="photo-lightbox-modal">
     <div class="photo-lightbox-box">
       <button type="button" class="photo-lightbox-close" id="photo-lightbox-close" aria-label="閉じる">✕</button>
-      <img id="photo-lightbox-img" class="photo-lightbox-img" src="" alt="Enlarged review photo" />
+      <img id="photo-lightbox-img" class="photo-lightbox-img" src="" alt="拡大レビュー写真" />
       <p id="photo-lightbox-caption" class="photo-lightbox-caption"></p>
     </div>
   </div>
 @endsection
 
 @section('scripts')
-  <script src="/foodlog/assets/js/pagination.js?v=20261122a"></script>
+  <script src="/foodlog/assets/js/pagination.js?v=20261122b"></script>
   <script>
     (function () {
-      const reviews = @json($reviewsPayload);
+      const allReviews = @json($reviewsPayload);
       const PER_PAGE = 10;
       let currentPage = 1;
+      let currentSort = 'date_desc';
+      let currentKeyword = '';
 
       function el(tag, className, text) {
         const node = document.createElement(tag);
@@ -101,13 +112,64 @@
         if (e.key === 'Escape') closeLightbox();
       });
 
+      document.getElementById('user-review-sort')?.addEventListener('change', e => {
+        currentSort = e.target.value;
+        currentPage = 1;
+        render();
+      });
+      document.getElementById('user-review-keyword')?.addEventListener('input', e => {
+        currentKeyword = e.target.value.trim().toLowerCase();
+        currentPage = 1;
+        render();
+      });
+
+      function getFiltered() {
+        const filtered = allReviews.filter(rv => {
+          if (!currentKeyword) return true;
+          const hay = `${rv.restaurant_name || ''} ${rv.order_details || ''} ${rv.impression || ''}`.toLowerCase();
+          return hay.includes(currentKeyword);
+        });
+        filtered.sort((a, b) => {
+          const dA = a.date || '', dB = b.date || '';
+          const rA = Number(a.rating || 0), rB = Number(b.rating || 0);
+          switch (currentSort) {
+            case 'date_asc': return dA.localeCompare(dB) || (a.id - b.id);
+            case 'rating_desc': return (rB - rA) || dB.localeCompare(dA) || (b.id - a.id);
+            case 'rating_asc': return (rA - rB) || dB.localeCompare(dA) || (b.id - a.id);
+            default: return dB.localeCompare(dA) || (b.id - a.id);
+          }
+        });
+        return filtered;
+      }
+
       function render() {
         const list = document.getElementById('user-reviews-list');
+        const reviews = getFiltered();
+        const badge = document.getElementById('user-review-badge');
+        const rated = allReviews.filter(r => Number(r.rating) > 0);
+        const avg = rated.length ? (rated.reduce((s, r) => s + Number(r.rating), 0) / rated.length).toFixed(1) : null;
+        if (badge) {
+          if (!allReviews.length) {
+            badge.textContent = '0件';
+          } else if (currentKeyword) {
+            badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${reviews.length} / ${allReviews.length}件`;
+          } else {
+            badge.textContent = (avg ? `★ ${avg}\u00A0\u00A0\u00A0\u00A0` : '') + `${allReviews.length}件`;
+          }
+        }
+
         list.replaceChildren();
+
+        if (!allReviews.length) {
+          const empty = el('div', 'reviews-empty');
+          empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'まだ投稿されたレビューはありません。'));
+          list.appendChild(empty);
+          return;
+        }
 
         if (!reviews.length) {
           const empty = el('div', 'reviews-empty');
-          empty.append(el('div', 'empty-icon', '📋'), el('p', '', 'まだ投稿されたレビューはありません。'));
+          empty.append(el('div', 'empty-icon', '🔍'), el('p', '', '条件に一致するレビューがありません。'));
           list.appendChild(empty);
           return;
         }
@@ -130,9 +192,8 @@
           const leftMeta = el('div');
           leftMeta.style.cssText = 'display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;';
 
-          const formatted = new Date(rv.date + 'T00:00:00').toLocaleDateString('en-US', {
-            year: 'numeric', month: 'long', day: 'numeric'
-          });
+          const d = new Date(rv.date + 'T00:00:00');
+          const formatted = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
           leftMeta.appendChild(el('div', 'review-date', `📅 ${formatted}`));
 
           const restLink = el('a', 'review-restaurant-link', `🏪 ${rv.restaurant_name} →`);
@@ -151,7 +212,7 @@
           if (rv.image) {
             const img = el('img', 'review-photo');
             img.src = `/foodlog/${rv.image}`;
-            img.alt = 'Review photo';
+            img.alt = 'レビュー写真';
             img.title = 'クリックして拡大';
             img.addEventListener('click', () => {
               openLightbox(img.src, rv.order_details ? `🍽️ ${rv.order_details}` : '');
