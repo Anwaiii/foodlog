@@ -19,11 +19,11 @@ async function loadData() {
   const restaurants = await resR.json();
 
   const allReviews = [];
-  for (const r of restaurants) {
+  await Promise.all(restaurants.map(async r => {
     const rv = await fetch(`/foodlog/api/reviews.php?restaurant_id=${encodeURIComponent(r.id)}`);
     const reviews = await rv.json();
     allReviews.push(...reviews.map(review => ({ ...review, restaurant: r })));
-  }
+  }));
 
   return { restaurants, reviews: allReviews };
 }
@@ -34,7 +34,7 @@ function renderSummary(restaurants, reviews) {
   const totalBadge = document.getElementById('total-reviews-badge');
   if (totalBadge) totalBadge.textContent = reviews.length + ' Reviews';
 
-  const rated = reviews.filter(r => r.rating);
+  const rated = reviews.filter(r => Number(r.rating) > 0);
   if (rated.length > 0) {
     const avg = rated.reduce((sum, r) => sum + Number(r.rating), 0) / rated.length;
     document.getElementById('s-avg-rating').textContent = avg.toFixed(1);
@@ -119,14 +119,17 @@ function renderRanking(restaurants, reviews) {
 
   const stats = restaurants.map(r => {
     const rvs = reviews.filter(rv => String(rv.restaurant_id) === String(r.id));
-    const rated = rvs.filter(rv => rv.rating);
+    const rated = rvs.filter(rv => Number(rv.rating) > 0);
     const avg = rated.length > 0
       ? rated.reduce((s, rv) => s + Number(rv.rating), 0) / rated.length
       : 0;
-    return { ...r, avg, reviewCount: rvs.length };
+    return { ...r, avg, ratedCount: rated.length, reviewCount: rvs.length };
   });
 
-  const top = stats.filter(r => r.reviewCount > 0).sort((a, b) => b.avg - a.avg).slice(0, 5);
+  const top = stats
+    .filter(r => r.ratedCount > 0)
+    .sort((a, b) => (b.avg - a.avg) || (b.reviewCount - a.reviewCount))
+    .slice(0, 5);
 
   if (top.length === 0) {
     const empty = el('div', 'reviews-empty');
@@ -149,11 +152,10 @@ function renderRanking(restaurants, reviews) {
       thumb.style.background = GRADIENTS[i % GRADIENTS.length];
     }
 
-    const stars = '⭐'.repeat(Math.round(r.avg));
     const info = el('div', 'ranking-info');
     info.append(
       el('div', 'ranking-name', r.name || ''),
-      el('div', 'ranking-meta', `${stars} ${r.avg.toFixed(1)} · ${r.reviewCount} reviews`)
+      el('div', 'ranking-meta', `★ ${r.avg.toFixed(1)}\u00A0\u00A0\u00A0${r.reviewCount} reviews`)
     );
 
     link.append(

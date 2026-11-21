@@ -36,9 +36,9 @@
 
     <!-- Charts Row -->
     <div class="stats-charts">
-      <!-- Monthly Orders -->
+      <!-- Monthly Reviews -->
       <div class="stats-panel">
-        <h3>📈 Monthly Orders (last 6 months)</h3>
+        <h3>📈 Monthly Reviews (last 6 months)</h3>
         <div class="chart-container" id="monthly-chart"></div>
       </div>
 
@@ -58,5 +58,5 @@
 @endsection
 
 @section('scripts')
-  <script src="/foodlog/assets/js/stats.js?v=20261120f"></script>
+  <script src="/foodlog/assets/js/stats.js?v=20261122a"></script>
 @endsection
