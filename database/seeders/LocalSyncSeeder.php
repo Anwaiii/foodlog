@@ -28,7 +28,7 @@ class LocalSyncSeeder extends Seeder
 
         Schema::create('members', function (Blueprint $table) {
             $table->id();
-            $table->string('member_id', 50)->unique();
+            $table->string('member_code', 50)->unique();
             $table->string('name', 100);
             $table->string('name_kana', 100);
             $table->string('password', 255);

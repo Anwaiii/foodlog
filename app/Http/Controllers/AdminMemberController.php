@@ -50,6 +50,6 @@ class AdminMemberController extends Controller
 
         $label = $target->delete_flg ? '停止' : '有効化';
 
-        return back()->with('status', "会員「{$target->nickname}（{$target->member_id}）」を{$label}しました。");
+        return back()->with('status', "会員「{$target->nickname}（{$target->member_code}）」を{$label}しました。");
     }
 }

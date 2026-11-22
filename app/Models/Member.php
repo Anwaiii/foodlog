@@ -16,7 +16,7 @@ class Member extends Authenticatable
     protected $table = 'members';
 
     protected $fillable = [
-        'member_id',
+        'member_code',
         'name',
         'name_kana',
         'password',

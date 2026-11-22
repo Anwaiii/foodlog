@@ -12,7 +12,7 @@ class MemberSeeder extends Seeder
     {
         $members = [
             [
-                'member_id'   => 'admin01',
+                'member_code' => 'admin01',
                 'name'        => '管理者 太郎',
                 'name_kana'   => 'カンリシャ タロウ',
                 'password'    => Hash::make('password123'),
@@ -22,7 +22,7 @@ class MemberSeeder extends Seeder
                 'delete_flg'  => false,
             ],
             [
-                'member_id'   => 'user01',
+                'member_code' => 'user01',
                 'name'        => '山田 花子',
                 'name_kana'   => 'ヤマダ ハナコ',
                 'password'    => Hash::make('password123'),
@@ -32,7 +32,7 @@ class MemberSeeder extends Seeder
                 'delete_flg'  => false,
             ],
             [
-                'member_id'   => 'user02',
+                'member_code' => 'user02',
                 'name'        => '鈴木 一郎',
                 'name_kana'   => 'スズキ イチロウ',
                 'password'    => Hash::make('password123'),
@@ -45,7 +45,7 @@ class MemberSeeder extends Seeder
 
         foreach ($members as $data) {
             Member::updateOrCreate(
-                ['member_id' => $data['member_id']],
+                ['member_code' => $data['member_code']],
                 $data
             );
         }

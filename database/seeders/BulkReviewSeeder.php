@@ -27,7 +27,7 @@ class BulkReviewSeeder extends Seeder
             $idx = $i - 1;
 
             $members[] = Member::updateOrCreate(
-                ['member_id' => "demo{$num}"],
+                ['member_code' => "demo{$num}"],
                 [
                     'name'        => $lastNames[$idx] . ' ' . $firstNames[$idx],
                     'name_kana'   => $lastKanas[$idx] . ' ' . $firstKanas[$idx],
@@ -41,8 +41,8 @@ class BulkReviewSeeder extends Seeder
         }
 
         // demo11以降の余分な会員がいれば、既存レビューをdemo01〜demo10に振り替えた上で削除
-        $extraMembers = Member::where('member_id', 'like', 'demo%')
-            ->whereNotIn('member_id', collect($members)->pluck('member_id'))
+        $extraMembers = Member::where('member_code', 'like', 'demo%')
+            ->whereNotIn('member_code', collect($members)->pluck('member_code'))
             ->get();
 
         if ($extraMembers->isNotEmpty()) {

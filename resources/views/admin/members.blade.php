@@ -56,7 +56,7 @@
         <tbody>
           @foreach($members as $m)
             <tr class="{{ $m->delete_flg ? 'is-disabled' : '' }}">
-              <td><code>{{ $m->member_id }}</code></td>
+              <td><code>{{ $m->member_code }}</code></td>
               <td>
                 @if(!$m->delete_flg)
                   <a href="/foodlog/users/{{ $m->id }}" class="review-author review-author-link">
@@ -90,7 +90,7 @@
                   <form method="POST" action="/foodlog/admin/members/{{ $m->id }}/toggle-status" style="margin:0;">
                     @csrf
                     <button type="submit" class="admin-action-btn {{ $m->delete_flg ? '' : 'danger' }}"
-                            onclick="return confirm('{{ $m->nickname }} ({{ $m->member_id }})?');">
+                            onclick="return confirm('{{ $m->nickname }} ({{ $m->member_code }})?');">
                       {{ $m->delete_flg ? __('✅ 有効化') : __('⛔ 停止') }}
                     </button>
                   </form>

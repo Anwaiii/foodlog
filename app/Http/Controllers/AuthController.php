@@ -33,7 +33,7 @@ class AuthController extends Controller
 
         $member = Member::where('delete_flg', false)
             ->where(function ($query) use ($loginId) {
-                $query->where('member_id', $loginId)
+                $query->where('member_code', $loginId)
                       ->orWhere('email', $loginId);
             })
             ->first();
@@ -92,15 +92,15 @@ class AuthController extends Controller
             'password.confirmed' => 'パスワード（確認）が一致しません。',
         ]);
 
-        // システム側で一意の会員IDを自動採番（例: M000014）
+        // システム側で一意の会員コードを自動採番（例: M000014）
         $seq = (int) (Member::max('id') ?? 0) + 1;
         do {
-            $memberId = 'M' . str_pad((string) $seq, 6, '0', STR_PAD_LEFT);
+            $memberCode = 'M' . str_pad((string) $seq, 6, '0', STR_PAD_LEFT);
             $seq++;
-        } while (Member::where('member_id', $memberId)->exists());
+        } while (Member::where('member_code', $memberCode)->exists());
 
         $member = Member::create([
-            'member_id'   => $memberId,
+            'member_code' => $memberCode,
             'name'        => trim($validated['name']),
             'name_kana'   => trim($validated['name_kana']),
             'nickname'    => trim($validated['nickname']),
@@ -114,6 +114,6 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         return redirect('/foodlog/member')
-            ->with('status', "会員登録が完了しました！あなたの会員IDは「{$member->member_id}」です。");
+            ->with('status', "会員登録が完了しました！あなたの会員IDは「{$member->member_code}」です。");
     }
 }

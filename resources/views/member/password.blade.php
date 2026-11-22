@@ -7,7 +7,7 @@
       <div class="auth-header">
         <div class="hero-tag">🔒 {{ __('パスワード変更') }}</div>
         <h1>{{ __('パスワード変更') }}</h1>
-        <p>{{ $member->nickname }}（{{ $member->member_id }}）</p>
+        <p>{{ $member->nickname }}（{{ $member->member_code }}）</p>
       </div>
 
       @if(session('status'))

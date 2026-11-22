@@ -17,7 +17,7 @@
       <div class="profile-list">
         <div class="profile-row">
           <span class="profile-label">{{ __('会員ID') }}</span>
-          <span class="profile-value">{{ $member->member_id }}</span>
+          <span class="profile-value">{{ $member->member_code }}</span>
         </div>
         <div class="profile-row">
           <span class="profile-label">{{ __('名前') }}</span>
