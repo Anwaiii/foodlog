@@ -30,8 +30,27 @@
     window.t = function (key) {
       return (window.I18N && Object.prototype.hasOwnProperty.call(window.I18N, key)) ? window.I18N[key] : key;
     };
+    window.showToast = function (message, type) {
+      var container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+      var toast = document.createElement('div');
+      toast.className = 'toast toast-' + (type || 'info');
+      toast.setAttribute('role', 'status');
+      toast.textContent = String(message || '');
+      container.appendChild(toast);
+      requestAnimationFrame(function () { toast.classList.add('show'); });
+      setTimeout(function () {
+        toast.classList.remove('show');
+        setTimeout(function () { toast.remove(); }, 280);
+      }, 3000);
+    };
   </script>
-  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122i" />
+  <link rel="stylesheet" href="/foodlog/assets/css/style.css?v=20261122j" />
 </head>
 <body>
 

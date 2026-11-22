@@ -1,4 +1,4 @@
-// ─── 統計ダッシュボード ──────────────────────────────────────────────────────
+// ─── 統計ダッシュボード（単一SQL集計API版） ─────────────────────────────────
 
 const GRADIENTS = [
   'linear-gradient(135deg, #1a0533 0%, #3d1a6e 100%)',
@@ -22,92 +22,65 @@ function el(tag, className, text) {
   return node;
 }
 
-async function loadData() {
-  const resR = await fetch('/foodlog/api/restaurants.php');
-  const restaurants = await resR.json();
-
-  const allReviews = [];
-  await Promise.all(restaurants.map(async r => {
-    const rv = await fetch(`/foodlog/api/reviews.php?restaurant_id=${encodeURIComponent(r.id)}`);
-    const reviews = await rv.json();
-    allReviews.push(...reviews.map(review => ({ ...review, restaurant: r })));
-  }));
-
-  return { restaurants, reviews: allReviews };
+async function loadStats() {
+  const res = await fetch('/foodlog/api/stats.php');
+  if (!res.ok) throw new Error('Failed to load stats');
+  return await res.json();
 }
 
-function renderSummary(restaurants, reviews) {
-  document.getElementById('s-restaurants').textContent = restaurants.length;
-  document.getElementById('s-reviews').textContent = reviews.length;
+function renderSummary(summary) {
+  document.getElementById('s-restaurants').textContent = summary.restaurant_count ?? 0;
+  document.getElementById('s-reviews').textContent = summary.review_count ?? 0;
   const totalBadge = document.getElementById('total-reviews-badge');
-  if (totalBadge) totalBadge.textContent = isEn() ? `${reviews.length} Reviews` : `${reviews.length}件`;
-
-  const rated = reviews.filter(r => Number(r.rating) > 0);
-  if (rated.length > 0) {
-    const avg = rated.reduce((sum, r) => sum + Number(r.rating), 0) / rated.length;
-    document.getElementById('s-avg-rating').textContent = avg.toFixed(1);
+  if (totalBadge) {
+    const cnt = summary.review_count ?? 0;
+    totalBadge.textContent = isEn() ? `${cnt} Reviews` : `${cnt}件`;
   }
 
-  if (reviews.length > 0) {
-    const dates = reviews.map(r => r.date).sort().reverse();
-    const d = dates[0];
-    document.getElementById('s-latest').textContent = d.replace(/-/g, '/');
+  if (summary.avg_rating !== null && summary.avg_rating !== undefined) {
+    document.getElementById('s-avg-rating').textContent = Number(summary.avg_rating).toFixed(1);
+  }
+
+  if (summary.latest_date) {
+    document.getElementById('s-latest').textContent = String(summary.latest_date).replace(/-/g, '/');
   }
 }
 
-function renderMonthlyChart(reviews) {
+function renderMonthlyChart(monthly) {
   const container = document.getElementById('monthly-chart');
   container.replaceChildren();
 
-  const months = [];
-  const now = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const max = Math.max(...monthly.map(m => Number(m.count) || 0), 1);
+
+  monthly.forEach(m => {
+    const d = new Date(m.year, (m.month || 1) - 1, 1);
     const label = isEn()
       ? d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-      : `${d.getFullYear()}年${d.getMonth() + 1}月`;
-    months.push({ key, label, count: 0 });
-  }
-
-  reviews.forEach(rv => {
-    const key = (rv.date || '').substring(0, 7);
-    const m = months.find(x => x.key === key);
-    if (m) m.count++;
-  });
-
-  const max = Math.max(...months.map(m => m.count), 1);
-
-  months.forEach(m => {
+      : `${m.year}年${m.month}月`;
     const row = el('div', 'bar-row');
     const track = el('div', 'bar-track');
     const fill = el('div', 'bar-fill');
-    fill.style.width = `${(m.count / max) * 100}%`;
+    fill.style.width = `${((Number(m.count) || 0) / max) * 100}%`;
     track.appendChild(fill);
     row.append(
-      el('div', 'bar-label', m.label),
+      el('div', 'bar-label', label),
       track,
-      el('div', 'bar-value', String(m.count))
+      el('div', 'bar-value', String(m.count ?? 0))
     );
     container.appendChild(row);
   });
 }
 
-function renderCategoryChart(restaurants) {
+function renderCategoryChart(categories) {
   const container = document.getElementById('category-chart');
   container.replaceChildren();
 
-  const cats = {};
-  restaurants.forEach(r => {
-    const cat = r.category || t('その他');
-    cats[cat] = (cats[cat] || 0) + 1;
-  });
-
-  const sorted = Object.entries(cats).sort((a, b) => b[1] - a[1]);
-  const max = Math.max(...sorted.map(x => x[1]), 1);
+  const max = Math.max(...categories.map(x => Number(x.count) || 0), 1);
   const colors = ['#ff6b35', '#7c3aed', '#06b6d4', '#22c55e', '#f59e0b', '#ef4444'];
 
-  sorted.forEach(([cat, count], i) => {
+  categories.forEach((item, i) => {
+    const label = item.category === 'Other' ? t('その他') : (item.category || t('その他'));
+    const count = Number(item.count) || 0;
     const row = el('div', 'bar-row');
     const track = el('div', 'bar-track');
     const fill = el('div', 'bar-fill');
@@ -115,7 +88,7 @@ function renderCategoryChart(restaurants) {
     fill.style.background = colors[i % colors.length];
     track.appendChild(fill);
     row.append(
-      el('div', 'bar-label', cat),
+      el('div', 'bar-label', label),
       track,
       el('div', 'bar-value', String(count))
     );
@@ -123,32 +96,18 @@ function renderCategoryChart(restaurants) {
   });
 }
 
-function renderRanking(restaurants, reviews) {
+function renderRanking(ranking) {
   const container = document.getElementById('ranking-list');
   container.replaceChildren();
 
-  const stats = restaurants.map(r => {
-    const rvs = reviews.filter(rv => String(rv.restaurant_id) === String(r.id));
-    const rated = rvs.filter(rv => Number(rv.rating) > 0);
-    const avg = rated.length > 0
-      ? rated.reduce((s, rv) => s + Number(rv.rating), 0) / rated.length
-      : 0;
-    return { ...r, avg, ratedCount: rated.length, reviewCount: rvs.length };
-  });
-
-  const top = stats
-    .filter(r => r.ratedCount > 0)
-    .sort((a, b) => (b.avg - a.avg) || (b.reviewCount - a.reviewCount))
-    .slice(0, 5);
-
-  if (top.length === 0) {
+  if (!ranking || ranking.length === 0) {
     const empty = el('div', 'reviews-empty');
     empty.append(el('div', 'empty-icon', '📋'), el('p', '', t('まだレビューがありません。')));
     container.appendChild(empty);
     return;
   }
 
-  top.forEach((r, i) => {
+  ranking.forEach((r, i) => {
     const link = el('a', 'ranking-item');
     link.href = `/foodlog/restaurant.php?id=${encodeURIComponent(r.id)}`;
 
@@ -163,12 +122,13 @@ function renderRanking(restaurants, reviews) {
     }
 
     const info = el('div', 'ranking-info');
+    const count = Number(r.review_count) || 0;
     const reviewLabel = isEn()
-      ? `${r.reviewCount} ${r.reviewCount === 1 ? 'review' : 'reviews'}`
-      : `${r.reviewCount}件のレビュー`;
+      ? `${count} ${count === 1 ? 'review' : 'reviews'}`
+      : `${count}件のレビュー`;
     info.append(
       el('div', 'ranking-name', r.name || ''),
-      el('div', 'ranking-meta', `★ ${r.avg.toFixed(1)}\u00A0\u00A0\u00A0${reviewLabel}`)
+      el('div', 'ranking-meta', `★ ${Number(r.avg_rating || 0).toFixed(1)}\u00A0\u00A0\u00A0${reviewLabel}`)
     );
 
     link.append(
@@ -182,11 +142,17 @@ function renderRanking(restaurants, reviews) {
 }
 
 async function init() {
-  const { restaurants, reviews } = await loadData();
-  renderSummary(restaurants, reviews);
-  renderMonthlyChart(reviews);
-  renderCategoryChart(restaurants);
-  renderRanking(restaurants, reviews);
+  try {
+    const data = await loadStats();
+    renderSummary(data.summary || {});
+    renderMonthlyChart(data.monthly || []);
+    renderCategoryChart(data.categories || []);
+    renderRanking(data.ranking || []);
+  } catch (e) {
+    if (typeof window.showToast === 'function') {
+      window.showToast(t('統計データの読み込みに失敗しました。'), 'error');
+    }
+  }
 }
 
 init();

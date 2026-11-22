@@ -16,7 +16,11 @@
       <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" title="{{ __('ライト / ダークモード切替') }}" aria-label="{{ __('テーマ切替') }}">🌙</button>
       @auth
         <a href="/foodlog/member" class="nav-user-pill" title="{{ __('会員情報の確認') }}">
-          <span>{{ Auth::user()->isAdmin() ? '👑' : '👤' }}</span>
+          @if(Auth::user()->avatar)
+            <img src="/foodlog/{{ Auth::user()->avatar }}" alt="" class="avatar-img avatar-xs" />
+          @else
+            <span class="avatar-initial avatar-xs" style="background:{{ Auth::user()->avatarColor() }};">{{ Auth::user()->avatarInitial() }}</span>
+          @endif
           <span>{{ Auth::user()->nickname }}</span>
         </a>
       @else
@@ -43,10 +47,13 @@
             </div>
             <div class="menu-divider"></div>
             <a href="/foodlog/member" class="menu-item">{{ __('👤 会員情報の確認') }}</a>
+            <a href="/foodlog/member/edit" class="menu-item">{{ __('✏️ 会員情報の編集') }}</a>
             <a href="/foodlog/favorites" class="menu-item">{{ __('❤️ お気に入り一覧') }}</a>
             <a href="/foodlog/users/{{ Auth::id() }}" class="menu-item">{{ __('📖 自分のレビュー履歴') }}</a>
             @if(Auth::user()->isAdmin())
+              <div class="menu-divider"></div>
               <a href="/foodlog/admin/members" class="menu-item">{{ __('🛠️ 会員管理（管理者）') }}</a>
+              <a href="/foodlog/admin/reviews" class="menu-item">{{ __('📝 レビュー監視（管理者）') }}</a>
             @endif
             <div class="menu-divider"></div>
             <form method="POST" action="/foodlog/logout" style="margin:0;">

@@ -56,12 +56,39 @@ const reviewFilters = {
   keyword: ''
 };
 
+function notify(msg, type = 'info') {
+  if (typeof window.showToast === 'function') {
+    window.showToast(msg, type);
+  }
+}
+
+const AVATAR_COLORS = ['#ff6b35', '#7c3aed', '#06b6d4', '#22c55e', '#f59e0b', '#ec4899', '#3b82f6'];
+
+function buildAuthorAvatar(rv) {
+  if (rv.member_avatar) {
+    const img = el('img', 'avatar-img avatar-xs');
+    img.src = `/foodlog/${rv.member_avatar}`;
+    img.alt = '';
+    return img;
+  }
+  const initial = String(rv.member_nickname || 'U').trim().charAt(0).toUpperCase() || 'U';
+  const span = el('span', 'avatar-initial avatar-xs', initial);
+  span.style.background = AVATAR_COLORS[(Number(rv.member_id) || 0) % AVATAR_COLORS.length];
+  return span;
+}
+
 // ─── レストラン情報の読み込み ─────────────────────────────────────────────────
 async function loadRestaurant() {
-  const res = await fetch('/foodlog/api/restaurants.php');
-  restaurantList = await res.json();
-  const r = restaurantList.find(x => String(x.id) === String(restaurantId));
-  if (!r) { document.getElementById('detail-name').textContent = 'Not found'; return; }
+  const res = await fetch(`/foodlog/api/restaurants.php?id=${encodeURIComponent(restaurantId)}`);
+  if (!res.ok) {
+    document.getElementById('detail-name').textContent = t('レストランが見つかりません');
+    return;
+  }
+  const r = await res.json();
+  if (!r || !r.id) {
+    document.getElementById('detail-name').textContent = t('レストランが見つかりません');
+    return;
+  }
   currentRestaurant = r;
   renderRestaurantInfo(r);
 }
@@ -69,17 +96,25 @@ async function loadRestaurant() {
 function renderRestaurantInfo(r) {
   document.title = r.name + ' — FoodLog';
   document.getElementById('detail-category').textContent = r.category || '';
+  const metaWrap = document.getElementById('detail-meta-tags');
+  if (metaWrap) {
+    metaWrap.replaceChildren();
+    if (r.area) metaWrap.appendChild(el('span', 'meta-tag', `📍 ${r.area}`));
+    if (r.price_range) metaWrap.appendChild(el('span', 'meta-tag', `💴 ${r.price_range}`));
+  }
   document.getElementById('detail-name').textContent = r.name;
   document.getElementById('detail-desc').textContent = r.description || '';
   const detailAddress = document.getElementById('detail-address');
-  if (r.address) {
-    detailAddress.textContent = r.address;
-    detailAddress.style.display = 'block';
-  } else {
+  if (r.address && detailAddress) {
+    detailAddress.textContent = `🗺️ ${r.address} (${t('Google マップで開く')})`;
+    detailAddress.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.address)}`;
+    detailAddress.title = t('Google マップで開く');
+    detailAddress.style.display = 'inline-flex';
+  } else if (detailAddress) {
     detailAddress.style.display = 'none';
   }
 
-  const idx = restaurantList.indexOf(r);
+  const idx = (Number(r.id) || 0);
   const bannerImg = document.getElementById('banner-img');
   const placeholder = document.getElementById('banner-placeholder');
 
@@ -98,6 +133,30 @@ function renderRestaurantInfo(r) {
   }
 
   renderFavoriteButton(r);
+}
+
+function setupShareButton() {
+  const copyBtn = document.getElementById('copy-url-btn');
+  if (!copyBtn || copyBtn.dataset.bound) return;
+  copyBtn.dataset.bound = '1';
+  copyBtn.addEventListener('click', async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const tmp = document.createElement('input');
+        tmp.value = url;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        tmp.remove();
+      }
+      notify(t('URLをコピーしました！'), 'success');
+    } catch {
+      notify(t('コピーに失敗しました。'), 'error');
+    }
+  });
 }
 
 function renderFavoriteButton(r) {
@@ -128,6 +187,7 @@ function renderFavoriteButton(r) {
       const data = await res.json();
       currentRestaurant.is_favorited = data.favorited;
       renderFavoriteButton(currentRestaurant);
+      notify(data.favorited ? t('お気に入りに追加しました。') : t('お気に入りから解除しました。'), data.favorited ? 'success' : 'info');
     });
   }
 }
@@ -322,14 +382,17 @@ function renderReviews() {
     leftMeta.appendChild(el('div', 'review-date', `📅 ${formatted}`));
     if (rv.member_nickname) {
       if (rv.member_id) {
-        const authorLink = el('a', 'review-author review-author-link', `👤 ${rv.member_nickname}`);
+        const authorLink = el('a', 'review-author review-author-link');
         authorLink.href = `/foodlog/users/${encodeURIComponent(rv.member_id)}`;
         authorLink.title = isEn()
           ? `View ${rv.member_nickname}'s review history`
           : `${rv.member_nickname} のレビュー履歴を見る`;
+        authorLink.append(buildAuthorAvatar(rv), el('span', '', rv.member_nickname));
         leftMeta.appendChild(authorLink);
       } else {
-        leftMeta.appendChild(el('span', 'review-author', `👤 ${rv.member_nickname}`));
+        const authorSpan = el('span', 'review-author');
+        authorSpan.append(buildAuthorAvatar(rv), el('span', '', rv.member_nickname));
+        leftMeta.appendChild(authorSpan);
       }
     }
 
@@ -438,9 +501,10 @@ async function deleteReview(id) {
     headers: csrfHeaders(),
   });
   if (!res.ok) {
-    alert(t('削除権限がありません。'));
+    notify(t('削除権限がありません。'), 'error');
     return;
   }
+  notify(t('レビューを削除しました。'), 'info');
   loadReviews();
 }
 
@@ -496,11 +560,12 @@ if (reviewForm) {
     btn.textContent = t('投稿する'); btn.disabled = false;
 
     if (!res.ok) {
-      alert(t('レビューの保存に失敗しました。ログイン状態を確認してください。'));
+      notify(t('レビューの保存に失敗しました。ログイン状態を確認してください。'), 'error');
       return;
     }
 
     closeAddReviewModal();
+    notify(t('レビューを投稿しました！'), 'success');
     loadReviews();
   });
 }
@@ -553,7 +618,7 @@ if (deleteRestaurantBtn) {
       headers: csrfHeaders(),
     });
     if (!res.ok) {
-      alert(t('削除権限がありません。'));
+      notify(t('削除権限がありません。'), 'error');
       deleteRestaurantBtn.textContent = t('🗑 店舗を削除'); deleteRestaurantBtn.disabled = false;
       return;
     }
@@ -573,6 +638,10 @@ if (editModal && editInfoBtn) {
 
     document.getElementById('edit-name').value     = currentRestaurant.name || '';
     document.getElementById('edit-category').value = currentRestaurant.category || '';
+    const editAreaEl = document.getElementById('edit-area');
+    if (editAreaEl) editAreaEl.value = currentRestaurant.area || '';
+    const editPriceEl = document.getElementById('edit-price');
+    if (editPriceEl) editPriceEl.value = currentRestaurant.price_range || '';
     document.getElementById('edit-desc').value     = currentRestaurant.description || '';
     document.getElementById('edit-address').value  = currentRestaurant.address || '';
 
@@ -625,12 +694,12 @@ if (editRestaurantForm) {
 
     if (!res.ok) {
       if (res.status === 401 || res.status === 403) {
-        alert(t('更新権限がありません。'));
+        notify(t('更新権限がありません。'), 'error');
       } else if (res.status === 422) {
         const errData = await res.json().catch(() => ({}));
-        alert(t('入力エラー: ') + (errData.message || t('入力内容を確認してください。')));
+        notify(t('入力エラー: ') + (errData.message || t('入力内容を確認してください。')), 'error');
       } else {
-        alert(isEn() ? `Update failed (HTTP ${res.status}).` : `更新に失敗しました（HTTP ${res.status}）。`);
+        notify(isEn() ? `Update failed (HTTP ${res.status}).` : `更新に失敗しました（HTTP ${res.status}）。`, 'error');
       }
       return;
     }
@@ -638,11 +707,10 @@ if (editRestaurantForm) {
     const updated = await res.json();
     if (updated && updated.id) {
       currentRestaurant = updated;
-      const idx = restaurantList.findIndex(r => String(r.id) === String(restaurantId));
-      if (idx !== -1) restaurantList[idx] = updated;
       renderRestaurantInfo(updated);
     }
     closeEditModal();
+    notify(t('店舗情報を更新しました。'), 'success');
   });
 }
 
@@ -711,17 +779,18 @@ if (editReviewForm) {
 
     if (!res.ok) {
       if (res.status === 401 || res.status === 403) {
-        alert(t('レビューの更新権限がありません。'));
+        notify(t('レビューの更新権限がありません。'), 'error');
       } else if (res.status === 422) {
         const errData = await res.json().catch(() => ({}));
-        alert(t('入力エラー: ') + (errData.message || t('入力内容を確認してください。')));
+        notify(t('入力エラー: ') + (errData.message || t('入力内容を確認してください。')), 'error');
       } else {
-        alert(isEn() ? `Failed to update review (HTTP ${res.status}).` : `レビューの更新に失敗しました（HTTP ${res.status}）。`);
+        notify(isEn() ? `Failed to update review (HTTP ${res.status}).` : `レビューの更新に失敗しました（HTTP ${res.status}）。`, 'error');
       }
       return;
     }
 
     closeEditReviewModal();
+    notify(t('レビューを更新しました。'), 'success');
     loadReviews();
   });
 }
@@ -862,6 +931,7 @@ function init() {
 
   setupReviewControls();
   setupPhotoLightbox();
+  setupShareButton();
 
   loadRestaurant();
   loadReviews();

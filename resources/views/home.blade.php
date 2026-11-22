@@ -38,6 +38,21 @@
         </div>
       </div>
       <div class="filter-group">
+        <label class="filter-label">{{ __('エリア') }}</label>
+        <div class="filter-chips" id="area-chips">
+          <button type="button" class="filter-chip active" data-area="all">{{ __('すべて') }}</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">{{ __('予算帯') }}</label>
+        <div class="filter-chips" id="price-chips">
+          <button type="button" class="filter-chip active" data-price="all">{{ __('すべて') }}</button>
+          <button type="button" class="filter-chip" data-price="〜¥1,000">〜¥1,000</button>
+          <button type="button" class="filter-chip" data-price="¥1,000〜¥3,000">¥1,000〜¥3,000</button>
+          <button type="button" class="filter-chip" data-price="¥3,000〜">¥3,000〜</button>
+        </div>
+      </div>
+      <div class="filter-group">
         <label class="filter-label">{{ __('評価') }}</label>
         <div class="filter-chips" id="rating-chips">
           <button type="button" class="filter-chip active" data-rating="0">{{ __('すべて') }}</button>
@@ -98,6 +113,21 @@
           </label>
           <input type="text" id="r-category" name="category" placeholder="Japanese, Italian…" maxlength="30" required />
         </div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label for="r-area">{{ __('エリア') }}</label>
+            <input type="text" id="r-area" name="area" placeholder="{{ __('例: 渋谷、新宿、銀座') }}" maxlength="50" />
+          </div>
+          <div class="form-group">
+            <label for="r-price">{{ __('予算帯') }}</label>
+            <select id="r-price" name="price_range" class="form-select">
+              <option value="">{{ __('未設定') }}</option>
+              <option value="〜¥1,000">〜¥1,000</option>
+              <option value="¥1,000〜¥3,000">¥1,000〜¥3,000</option>
+              <option value="¥3,000〜">¥3,000〜</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
           <label for="r-desc">
             {{ __('紹介文') }}
@@ -142,5 +172,5 @@
     };
   </script>
   <script src="/foodlog/assets/js/pagination.js?v=20261122c"></script>
-  <script src="/foodlog/assets/js/app.js?v=20261122g"></script>
+  <script src="/foodlog/assets/js/app.js?v=20261122h"></script>
 @endsection

@@ -1159,3 +1159,187 @@ footer {
 }
 
 
+
+/* TOAST NOTIFICATIONS */
+.toast-container {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  pointer-events: none;
+  max-width: min(380px, calc(100vw - 2.5rem));
+}
+.toast {
+  padding: 0.78rem 1.15rem;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(24, 24, 34, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.24s ease, transform 0.24s ease;
+  pointer-events: auto;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast.toast-success {
+  background: linear-gradient(135deg, #15803d, #16a34a);
+  border-color: rgba(134, 239, 172, 0.35);
+}
+.toast.toast-error {
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+  border-color: rgba(252, 165, 165, 0.35);
+}
+.toast.toast-info {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+/* AVATARS */
+.avatar-img,
+.avatar-initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+  user-select: none;
+}
+.avatar-xs {
+  width: 22px;
+  height: 22px;
+  font-size: 0.72rem;
+}
+.avatar-sm {
+  width: 30px;
+  height: 30px;
+  font-size: 0.86rem;
+}
+.avatar-lg {
+  width: 76px;
+  height: 76px;
+  font-size: 2rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+}
+.avatar-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+}
+.avatar-edit-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+.remove-avatar-check {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+  font-size: 0.8rem !important;
+  color: var(--muted) !important;
+  cursor: pointer;
+}
+.remove-avatar-check input {
+  width: auto !important;
+}
+
+/* AREA & PRICE TAGS */
+.card-meta-tags,
+.detail-meta-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0.45rem;
+}
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* DETAIL MAP LINK & SHARE BUTTON */
+.detail-address-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 0.55rem;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.detail-address-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.detail-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.detail-share-btn:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* 2-COLUMN MODAL FIELDS & ADMIN FILTER FORM */
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+@media (max-width: 560px) {
+  .form-row-2col { grid-template-columns: 1fr; }
+}
+.form-select {
+  width: 100%;
+  padding: 0.72rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.92rem;
+}
+.admin-filter-form {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+.review-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}

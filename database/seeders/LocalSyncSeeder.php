@@ -33,6 +33,7 @@ class LocalSyncSeeder extends Seeder
             $table->string('name_kana', 100);
             $table->string('password', 255);
             $table->string('nickname', 50);
+            $table->string('avatar', 255)->nullable();
             $table->string('email', 255)->unique();
             $table->tinyInteger('member_type')->default(2);
             $table->boolean('delete_flg')->default(0);
@@ -43,6 +44,8 @@ class LocalSyncSeeder extends Seeder
             $table->id();
             $table->string('name', 255);
             $table->string('category', 30)->nullable();
+            $table->string('area', 50)->nullable();
+            $table->string('price_range', 30)->nullable();
             $table->text('description')->nullable();
             $table->string('address', 100)->nullable();
             $table->string('image', 255)->nullable();

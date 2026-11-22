@@ -36,6 +36,8 @@ class FavoriteController extends Controller
                         'id'           => $r->id,
                         'name'         => $r->name,
                         'category'     => $r->category,
+                        'area'         => $r->area,
+                        'price_range'  => $r->price_range,
                         'description'  => $r->description,
                         'address'      => $r->address,
                         'image'        => $r->image,

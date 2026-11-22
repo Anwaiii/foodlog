@@ -21,6 +21,7 @@ class Member extends Authenticatable
         'name_kana',
         'password',
         'nickname',
+        'avatar',
         'email',
         'member_type',
         'delete_flg',
@@ -44,5 +45,17 @@ class Member extends Authenticatable
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class, 'member_id');
+    }
+
+    public function avatarInitial(): string
+    {
+        $name = trim((string) ($this->nickname ?: $this->name ?: 'U'));
+        return mb_strtoupper(mb_substr($name, 0, 1));
+    }
+
+    public function avatarColor(): string
+    {
+        $palette = ['#ff6b35', '#7c3aed', '#06b6d4', '#22c55e', '#f59e0b', '#ec4899', '#3b82f6'];
+        return $palette[((int) $this->id) % count($palette)];
     }
 }

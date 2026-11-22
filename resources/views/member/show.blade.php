@@ -6,6 +6,13 @@
     <div class="auth-card">
       <div class="auth-header">
         <div class="hero-tag">👤 {{ __('会員情報の確認') }}</div>
+        <div style="margin:0.8rem 0 0.5rem;display:flex;justify-content:center;">
+          @if($member->avatar)
+            <img src="/foodlog/{{ $member->avatar }}" alt="{{ $member->nickname }}" class="avatar-img avatar-lg" />
+          @else
+            <span class="avatar-initial avatar-lg" style="background:{{ $member->avatarColor() }};">{{ $member->avatarInitial() }}</span>
+          @endif
+        </div>
         <h1>{{ __('会員情報の確認') }}</h1>
         <p>{{ __('現在ログイン中の会員情報です。') }}</p>
       </div>
@@ -54,7 +61,8 @@
       <div class="modal-actions" style="margin-top:1.8rem;flex-wrap:wrap;">
         <a href="/foodlog/" class="btn-cancel" style="text-decoration:none;text-align:center;">{{ __('ホームへ戻る') }}</a>
         <a href="/foodlog/users/{{ $member->id }}" class="btn-cancel" style="text-decoration:none;text-align:center;">{{ __('📖 自分のレビュー履歴') }}</a>
-        <a href="/foodlog/member/password" class="btn-submit" style="text-decoration:none;text-align:center;">{{ __('🔒 パスワード変更') }}</a>
+        <a href="/foodlog/member/edit" class="btn-submit" style="text-decoration:none;text-align:center;">{{ __('✏️ 会員情報を編集') }}</a>
+        <a href="/foodlog/member/password" class="btn-cancel" style="text-decoration:none;text-align:center;">{{ __('🔒 パスワード変更') }}</a>
       </div>
     </div>
   </main>

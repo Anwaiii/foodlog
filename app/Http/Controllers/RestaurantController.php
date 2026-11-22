@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Favorite;
 use App\Models\Restaurant;
+use App\Models\Review;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -35,18 +37,34 @@ class RestaurantController extends Controller
             ? Favorite::where('member_id', Auth::id())->pluck('restaurant_id')->flip()->all()
             : [];
 
+        // トップ画面の横断キーワード検索用テキストを 1 クエリで集約（N+1 HTTP リクエスト解消）
+        $reviewTextMap = [];
+        Review::query()
+            ->select('restaurant_id', 'order_details', 'impression')
+            ->get()
+            ->each(function ($rv) use (&$reviewTextMap) {
+                $rid = (int) $rv->restaurant_id;
+                $chunk = trim(($rv->order_details ?? '') . ' ' . ($rv->impression ?? ''));
+                if ($chunk !== '') {
+                    $reviewTextMap[$rid][] = $chunk;
+                }
+            });
+
         $restaurants = Restaurant::query()
             ->withCount(['reviews', 'favorites'])
             ->withAvg('reviews as avg_rating', 'rating')
             ->withMax('reviews as latest_date', 'date')
             ->orderBy('created_at', 'ASC')
             ->get()
-            ->map(function ($r) use ($userFavIds) {
+            ->map(function ($r) use ($userFavIds, $reviewTextMap) {
                 $data = $r->toArray();
-                $data['review_count']    = $r->reviews_count;
-                $data['avg_rating']      = $r->avg_rating ? round((float)$r->avg_rating, 1) : 0;
-                $data['favorites_count'] = $r->favorites_count;
-                $data['is_favorited']    = isset($userFavIds[$r->id]);
+                $data['review_count']       = $r->reviews_count;
+                $data['avg_rating']         = $r->avg_rating ? round((float)$r->avg_rating, 1) : 0;
+                $data['favorites_count']    = $r->favorites_count;
+                $data['is_favorited']       = isset($userFavIds[$r->id]);
+                $data['review_search_text'] = isset($reviewTextMap[$r->id])
+                    ? implode(' ', $reviewTextMap[$r->id])
+                    : '';
                 return $data;
             });
 
@@ -84,6 +102,8 @@ class RestaurantController extends Controller
         $validated = $request->validate([
             'name'        => 'required|string|max:50',
             'category'    => 'required|string|max:30',
+            'area'        => 'nullable|string|max:50',
+            'price_range' => 'nullable|string|max:30',
             'description' => 'nullable|string|max:200',
             'address'     => 'nullable|string|max:100',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
@@ -94,6 +114,8 @@ class RestaurantController extends Controller
         $restaurant = Restaurant::create([
             'name'        => $validated['name'],
             'category'    => $validated['category'],
+            'area'        => ($validated['area'] ?? '') !== '' ? trim($validated['area']) : null,
+            'price_range' => ($validated['price_range'] ?? '') !== '' ? trim($validated['price_range']) : null,
             'description' => $validated['description'] ?? '',
             'address'     => $validated['address'] ?? null,
             'image'       => $imagePath,
@@ -114,6 +136,8 @@ class RestaurantController extends Controller
         $validated = $request->validate([
             'name'        => 'required|string|max:50',
             'category'    => 'required|string|max:30',
+            'area'        => 'nullable|string|max:50',
+            'price_range' => 'nullable|string|max:30',
             'description' => 'nullable|string|max:200',
             'address'     => 'nullable|string|max:100',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
@@ -122,6 +146,8 @@ class RestaurantController extends Controller
         $updateData = [
             'name'        => $validated['name'],
             'category'    => $validated['category'],
+            'area'        => ($validated['area'] ?? '') !== '' ? trim($validated['area']) : null,
+            'price_range' => ($validated['price_range'] ?? '') !== '' ? trim($validated['price_range']) : null,
             'description' => $validated['description'] ?? '',
             'address'     => $validated['address'] ?? null,
         ];
@@ -157,15 +183,14 @@ class RestaurantController extends Controller
             return null;
         }
 
-        $file = $request->file('image');
-        $ext = strtolower($file->getClientOriginalExtension());
-        $filename = 'restaurant_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-
-        if (!file_exists($this->uploadDir)) {
-            mkdir($this->uploadDir, 0777, true);
-        }
-
-        $file->move($this->uploadDir, $filename);
-        return $this->uploadPath . $filename;
+        return ImageOptimizer::saveOptimized(
+            $request->file('image'),
+            $this->uploadDir,
+            $this->uploadPath,
+            'restaurant',
+            1200,
+            false,
+            82
+        );
     }
 }

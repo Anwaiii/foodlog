@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AdminExportController;
 use App\Http\Controllers\AdminMemberController;
+use App\Http\Controllers\AdminReviewController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\MemberController;
@@ -9,6 +11,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewLikeController;
+use App\Http\Controllers\StatsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -55,12 +58,18 @@ $registerAppRoutes = function () {
     Route::middleware('auth')->group(function () {
         Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
         Route::get('/member', [MemberController::class, 'show']);
+        Route::get('/member/edit', [MemberController::class, 'editProfile']);
+        Route::post('/member/edit', [MemberController::class, 'updateProfile']);
         Route::get('/member/password', [MemberController::class, 'editPassword']);
         Route::post('/member/password', [MemberController::class, 'updatePassword']);
 
-        // 管理者専用：会員管理
+        // 管理者専用：会員管理・レビュー監視・CSVエクスポート
         Route::get('/admin/members', [AdminMemberController::class, 'index'])->name('admin.members');
         Route::post('/admin/members/{id}/toggle-status', [AdminMemberController::class, 'toggleStatus'])->whereNumber('id');
+        Route::get('/admin/reviews', [AdminReviewController::class, 'index'])->name('admin.reviews');
+        Route::post('/admin/reviews/{id}/delete', [AdminReviewController::class, 'destroy'])->whereNumber('id');
+        Route::get('/admin/export/restaurants.csv', [AdminExportController::class, 'restaurantsCsv'])->name('admin.export.restaurants');
+        Route::get('/admin/export/reviews.csv', [AdminExportController::class, 'reviewsCsv'])->name('admin.export.reviews');
     });
 
     // API互換ルート（web経由の /foodlog/api/... リクエスト対応）
@@ -106,6 +115,8 @@ $registerAppRoutes = function () {
         Route::post('/favorites', [FavoriteController::class, 'toggle']);
         Route::post('/review-likes.php', [ReviewLikeController::class, 'toggle']);
         Route::post('/review-likes', [ReviewLikeController::class, 'toggle']);
+        Route::get('/stats.php', [StatsController::class, 'index']);
+        Route::get('/stats', [StatsController::class, 'index']);
     });
 };
 

@@ -7,15 +7,22 @@ const GRADIENTS = [
 
 const RESTAURANTS_PER_PAGE = 10;
 let allRestaurants = [];
-let allReviewsMap = {}; // { restaurantId: [reviews] }
 let homeCurrentPage = 1;
 const homeFilters = {
   query: '',
   category: 'all',
+  area: 'all',
+  price: 'all',
   minRating: 0,
   sort: 'default',
   favOnly: false,
 };
+
+function notify(msg, type = 'info') {
+  if (typeof window.showToast === 'function') {
+    window.showToast(msg, type);
+  }
+}
 
 if (typeof window.t !== 'function') {
   window.t = k => k;
@@ -40,16 +47,6 @@ function el(tag, className, text) {
 async function loadRestaurants() {
   const res = await fetch('/foodlog/api/restaurants.php');
   allRestaurants = await res.json();
-
-  await Promise.all(allRestaurants.map(async r => {
-    try {
-      const rv = await fetch(`/foodlog/api/reviews.php?restaurant_id=${encodeURIComponent(r.id)}`);
-      allReviewsMap[r.id] = await rv.json();
-    } catch {
-      allReviewsMap[r.id] = [];
-    }
-  }));
-
   return allRestaurants;
 }
 
@@ -99,34 +96,59 @@ function buildCategoryChips(restaurants) {
   });
 }
 
+function buildAreaChips(restaurants) {
+  const container = document.getElementById('area-chips');
+  if (!container) return;
+  container.replaceChildren();
+
+  const allBtn = el('button', `filter-chip ${homeFilters.area === 'all' ? 'active' : ''}`.trim(), t('すべて'));
+  allBtn.type = 'button';
+  allBtn.dataset.area = 'all';
+  container.appendChild(allBtn);
+
+  const areas = new Set();
+  restaurants.forEach(r => { if (r.area) areas.add(r.area); });
+  [...areas].sort((a, b) => a.localeCompare(b, 'ja')).forEach(area => {
+    const btn = el('button', `filter-chip ${homeFilters.area === area ? 'active' : ''}`.trim(), area);
+    btn.type = 'button';
+    btn.dataset.area = area;
+    container.appendChild(btn);
+  });
+}
+
 function getFilteredRestaurants() {
   let results = allRestaurants.map(r => {
-    const reviews = allReviewsMap[r.id] || [];
-    const rated = reviews.filter(rv => Number(rv.rating) > 0);
-    const avgRating = rated.length > 0
-      ? rated.reduce((s, rv) => s + Number(rv.rating), 0) / rated.length
-      : (Number(r.avg_rating) || 0);
-    const reviewCount = parseInt(r.review_count) || reviews.length || 0;
-    return { ...r, reviews, avgRating, reviewCount };
+    const avgRating = Number(r.avg_rating) || 0;
+    const reviewCount = parseInt(r.review_count) || 0;
+    return { ...r, avgRating, reviewCount };
   });
 
   if (homeFilters.query) {
     const q = homeFilters.query.toLowerCase();
     results = results.filter(r => {
-      const nameMatch = (r.name || '').toLowerCase().includes(q);
-      const catMatch = (r.category || '').toLowerCase().includes(q);
-      const descMatch = (r.description || '').toLowerCase().includes(q);
-      const addrMatch = (r.address || '').toLowerCase().includes(q);
-      const reviewMatch = r.reviews.some(rv =>
-        (rv.order_details || '').toLowerCase().includes(q) ||
-        (rv.impression || '').toLowerCase().includes(q)
-      );
-      return nameMatch || catMatch || descMatch || addrMatch || reviewMatch;
+      const hay = [
+        r.name || '',
+        r.category || '',
+        r.area || '',
+        r.price_range || '',
+        r.description || '',
+        r.address || '',
+        r.review_search_text || '',
+      ].join(' ').toLowerCase();
+      return hay.includes(q);
     });
   }
 
   if (homeFilters.category !== 'all') {
     results = results.filter(r => r.category === homeFilters.category);
+  }
+
+  if (homeFilters.area !== 'all') {
+    results = results.filter(r => r.area === homeFilters.area);
+  }
+
+  if (homeFilters.price !== 'all') {
+    results = results.filter(r => r.price_range === homeFilters.price);
   }
 
   if (homeFilters.minRating > 0) {
@@ -161,6 +183,8 @@ function getFilteredRestaurants() {
 function resetHomeFilters() {
   homeFilters.query = '';
   homeFilters.category = 'all';
+  homeFilters.area = 'all';
+  homeFilters.price = 'all';
   homeFilters.minRating = 0;
   homeFilters.sort = 'default';
   homeFilters.favOnly = false;
@@ -169,6 +193,8 @@ function resetHomeFilters() {
   const searchInput = document.getElementById('search-input');
   if (searchInput) searchInput.value = '';
   document.querySelectorAll('#category-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.category === 'all'));
+  document.querySelectorAll('#area-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.area === 'all'));
+  document.querySelectorAll('#price-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.price === 'all'));
   document.querySelectorAll('#rating-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.rating === '0'));
   document.querySelectorAll('#sort-chips .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.sort === 'default'));
   const favChip = document.getElementById('fav-only-chip');
@@ -189,7 +215,7 @@ function renderGrid(restaurants) {
   if (pgContainer) pgContainer.replaceChildren();
 
   const countEl = document.getElementById('restaurant-count');
-  const isFiltered = homeFilters.query || homeFilters.category !== 'all' || homeFilters.minRating > 0 || homeFilters.favOnly;
+  const isFiltered = homeFilters.query || homeFilters.category !== 'all' || homeFilters.area !== 'all' || homeFilters.price !== 'all' || homeFilters.minRating > 0 || homeFilters.favOnly;
   if (countEl) {
     if (isEn()) {
       countEl.textContent = isFiltered
@@ -264,6 +290,7 @@ function renderGrid(restaurants) {
       if (target) {
         target.is_favorited = data.favorited;
       }
+      notify(data.favorited ? t('お気に入りに追加しました。') : t('お気に入りから解除しました。'), data.favorited ? 'success' : 'info');
       renderFilteredGrid();
     });
     card.appendChild(favBtn);
@@ -305,11 +332,12 @@ function renderGrid(restaurants) {
           headers: csrfHeaders(),
         });
         if (!res.ok) {
-          alert(t('削除権限がありません。'));
+          notify(t('削除権限がありません。'), 'error');
           delBtn.textContent = '🗑';
           delBtn.disabled = false;
           return;
         }
+        notify(t('レストランを削除しました。'), 'info');
         init();
       });
       card.appendChild(delBtn);
@@ -322,11 +350,19 @@ function renderGrid(restaurants) {
     descEl.title = r.description || '';
     body.append(
       el('div', 'card-category', r.category || ''),
-      nameEl,
-      descEl
+      nameEl
     );
 
-    const addr = el('div', 'card-address', r.address ? `📍 ${r.address}` : '');
+    if (r.area || r.price_range) {
+      const tags = el('div', 'card-meta-tags');
+      if (r.area) tags.appendChild(el('span', 'meta-tag', `📍 ${r.area}`));
+      if (r.price_range) tags.appendChild(el('span', 'meta-tag', `💴 ${r.price_range}`));
+      body.appendChild(tags);
+    }
+
+    body.appendChild(descEl);
+
+    const addr = el('div', 'card-address', r.address ? `🗺️ ${r.address}` : '');
     if (r.address) addr.title = r.address;
     body.appendChild(addr);
 
@@ -380,6 +416,34 @@ function setupHomeFilters() {
       renderFilteredGrid();
     });
     catChips.dataset.bound = '1';
+  }
+
+  const areaChips = document.getElementById('area-chips');
+  if (areaChips && !areaChips.dataset.bound) {
+    areaChips.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-chip');
+      if (!btn) return;
+      areaChips.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      homeFilters.area = btn.dataset.area;
+      homeCurrentPage = 1;
+      renderFilteredGrid();
+    });
+    areaChips.dataset.bound = '1';
+  }
+
+  const priceChips = document.getElementById('price-chips');
+  if (priceChips && !priceChips.dataset.bound) {
+    priceChips.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-chip');
+      if (!btn) return;
+      priceChips.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      homeFilters.price = btn.dataset.price;
+      homeCurrentPage = 1;
+      renderFilteredGrid();
+    });
+    priceChips.dataset.bound = '1';
   }
 
   const ratingChips = document.getElementById('rating-chips');
@@ -490,11 +554,12 @@ if (addForm) {
       body: formData,
     });
     if (!res.ok) {
-      alert(t('追加権限がありません。'));
+      notify(t('追加権限がありません。'), 'error');
       return;
     }
     await res.json();
     closeModal();
+    notify(t('レストランを登録しました。'), 'success');
     init();
   });
 }
@@ -532,6 +597,7 @@ async function init() {
   const restaurants = await loadRestaurants();
   updateHeroStats(restaurants);
   buildCategoryChips(restaurants);
+  buildAreaChips(restaurants);
   renderFilteredGrid();
 }
 

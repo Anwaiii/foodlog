@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Review;
 use App\Models\ReviewLike;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +30,7 @@ class ReviewController extends Controller
             ? ReviewLike::where('member_id', Auth::id())->pluck('review_id')->flip()->all()
             : [];
 
-        $reviews = Review::with('member:id,nickname')
+        $reviews = Review::with('member:id,nickname,avatar')
             ->withCount('likes')
             ->where('restaurant_id', $restaurantId)
             ->orderBy('date', 'DESC')
@@ -38,6 +39,7 @@ class ReviewController extends Controller
             ->map(function ($rv) use ($userLikedIds) {
                 $data = $rv->toArray();
                 $data['member_nickname'] = $rv->member?->nickname;
+                $data['member_avatar']   = $rv->member?->avatar;
                 $data['likes_count']     = $rv->likes_count;
                 $data['is_liked']        = isset($userLikedIds[$rv->id]);
                 unset($data['member']);
@@ -74,9 +76,10 @@ class ReviewController extends Controller
             'image'         => $imagePath,
         ]);
 
-        $review->load('member:id,nickname');
+        $review->load('member:id,nickname,avatar');
         $data = $review->toArray();
         $data['member_nickname'] = $review->member?->nickname;
+        $data['member_avatar']   = $review->member?->avatar;
         unset($data['member']);
 
         return response()->json($data);
@@ -151,15 +154,14 @@ class ReviewController extends Controller
             return null;
         }
 
-        $file = $request->file('image');
-        $ext = strtolower($file->getClientOriginalExtension());
-        $filename = 'review_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-
-        if (!file_exists($this->uploadDir)) {
-            mkdir($this->uploadDir, 0777, true);
-        }
-
-        $file->move($this->uploadDir, $filename);
-        return $this->uploadPath . $filename;
+        return ImageOptimizer::saveOptimized(
+            $request->file('image'),
+            $this->uploadDir,
+            $this->uploadPath,
+            'review',
+            1200,
+            false,
+            82
+        );
     }
 }

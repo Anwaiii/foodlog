@@ -9,11 +9,13 @@
     <div class="detail-header-content">
       <a href="/foodlog/" class="back-btn">{{ __('← ホームへ戻る') }}</a>
       <div class="detail-category" id="detail-category"></div>
+      <div class="detail-meta-tags" id="detail-meta-tags"></div>
       <h1 class="detail-name" id="detail-name">{{ __('読み込み中…') }}</h1>
       <p class="detail-desc" id="detail-desc"></p>
-      <p class="detail-address" id="detail-address" style="font-size:0.9rem;color:var(--muted);margin-top:0.5rem;"></p>
+      <a class="detail-address-link" id="detail-address" href="#" target="_blank" rel="noopener noreferrer" style="display:none;"></a>
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1rem;align-items:center;">
         <button type="button" class="detail-fav-btn" id="detail-fav-btn">{{ __('🤍 お気に入り') }}</button>
+        <button type="button" class="detail-share-btn" id="copy-url-btn">{{ __('🔗 URLをコピー') }}</button>
         @if(Auth::check() && Auth::user()->isAdmin())
           <button class="edit-info-btn" id="edit-info-btn">{{ __('✏️ 店舗情報を編集') }}</button>
           <button class="edit-info-btn delete-restaurant-btn" id="delete-restaurant-btn">{{ __('🗑 店舗を削除') }}</button>
@@ -129,6 +131,21 @@
           </label>
           <input type="text" id="edit-category" name="category" maxlength="30" required />
         </div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label for="edit-area">{{ __('エリア') }}</label>
+            <input type="text" id="edit-area" name="area" placeholder="{{ __('例: 渋谷、新宿、銀座') }}" maxlength="50" />
+          </div>
+          <div class="form-group">
+            <label for="edit-price">{{ __('予算帯') }}</label>
+            <select id="edit-price" name="price_range" class="form-select">
+              <option value="">{{ __('未設定') }}</option>
+              <option value="〜¥1,000">〜¥1,000</option>
+              <option value="¥1,000〜¥3,000">¥1,000〜¥3,000</option>
+              <option value="¥3,000〜">¥3,000〜</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
           <label for="edit-desc">
             {{ __('紹介文') }}
@@ -229,5 +246,5 @@
     };
   </script>
   <script src="/foodlog/assets/js/pagination.js?v=20261122c"></script>
-  <script src="/foodlog/assets/js/restaurant.js?v=20261122g"></script>
+  <script src="/foodlog/assets/js/restaurant.js?v=20261122h"></script>
 @endsection

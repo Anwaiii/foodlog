@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Member;
 use App\Models\Review;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MemberController extends Controller
@@ -17,6 +19,63 @@ class MemberController extends Controller
         return view('member.show', [
             'member' => Auth::user(),
         ]);
+    }
+
+    public function editProfile(): View
+    {
+        return view('member.edit', [
+            'member' => Auth::user(),
+        ]);
+    }
+
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        /** @var Member $member */
+        $member = Auth::user();
+
+        $validated = $request->validate([
+            'name'          => ['required', 'string', 'max:100'],
+            'name_kana'     => ['required', 'string', 'max:100'],
+            'nickname'      => ['required', 'string', 'max:50'],
+            'email'         => ['required', 'email', 'max:255', Rule::unique('members', 'email')->ignore($member->id)],
+            'avatar'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+            'remove_avatar' => ['nullable', 'boolean'],
+        ], [
+            'name.required'      => 'お名前を入力してください。',
+            'name_kana.required' => 'お名前（カナ）を入力してください。',
+            'nickname.required'  => 'ニックネームを入力してください。',
+            'email.required'     => 'メールアドレスを入力してください。',
+            'email.email'        => '正しいメールアドレス形式で入力してください。',
+            'email.unique'       => 'このメールアドレスはすでに使用されています。',
+            'avatar.image'       => 'アイコンには画像ファイルを選択してください。',
+            'avatar.max'         => 'アイコン画像は5MB以内でアップロードしてください。',
+        ]);
+
+        $updateData = [
+            'name'      => trim($validated['name']),
+            'name_kana' => trim($validated['name_kana']),
+            'nickname'  => trim($validated['nickname']),
+            'email'     => trim($validated['email']),
+        ];
+
+        if ($request->boolean('remove_avatar')) {
+            $updateData['avatar'] = null;
+        } elseif ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+            $avatarDir = public_path('assets/images/avatars/');
+            $updateData['avatar'] = ImageOptimizer::saveOptimized(
+                $request->file('avatar'),
+                $avatarDir,
+                'assets/images/avatars',
+                'avatar_' . $member->id,
+                320,
+                true,
+                84
+            );
+        }
+
+        $member->update($updateData);
+
+        return redirect('/foodlog/member')->with('status', __('会員情報を更新しました。'));
     }
 
     public function editPassword(): View
@@ -86,6 +145,9 @@ class MemberController extends Controller
 
         return view('member.reviews', [
             'nickname'        => $target->nickname,
+            'avatar'          => $target->avatar,
+            'avatarInitial'   => $target->avatarInitial(),
+            'avatarColor'     => $target->avatarColor(),
             'isAdmin'         => $target->isAdmin(),
             'totalReviews'    => $reviews->count(),
             'restaurantCount' => $restaurantCount,

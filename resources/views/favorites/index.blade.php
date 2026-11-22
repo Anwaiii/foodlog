@@ -93,6 +93,7 @@
             const data = await res.json();
             if (!data.favorited) {
               items = items.filter(x => String(x.id) !== String(r.id));
+              if (typeof window.showToast === 'function') window.showToast(window.t('お気に入りから解除しました。'), 'info');
               render();
             }
           });
@@ -118,9 +119,17 @@
           const body = el('div', 'card-body');
           body.append(
             el('div', 'card-category', r.category || ''),
-            el('div', 'card-name', r.name || ''),
+            el('div', 'card-name', r.name || '')
+          );
+          if (r.area || r.price_range) {
+            const tags = el('div', 'card-meta-tags');
+            if (r.area) tags.appendChild(el('span', 'meta-tag', `📍 ${r.area}`));
+            if (r.price_range) tags.appendChild(el('span', 'meta-tag', `💴 ${r.price_range}`));
+            body.appendChild(tags);
+          }
+          body.append(
             el('div', 'card-desc', r.description || ''),
-            el('div', 'card-address', r.address ? `📍 ${r.address}` : '')
+            el('div', 'card-address', r.address ? `🗺️ ${r.address}` : '')
           );
 
           const footer = el('div', 'card-footer');

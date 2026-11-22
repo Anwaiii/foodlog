@@ -3,6 +3,13 @@
 
 @section('content')
   <section class="stats-hero">
+    <div style="margin-bottom:0.8rem;display:flex;justify-content:center;">
+      @if(!empty($avatar))
+        <img src="/foodlog/{{ $avatar }}" alt="{{ $nickname }}" class="avatar-img avatar-lg" />
+      @else
+        <span class="avatar-initial avatar-lg" style="background:{{ $avatarColor ?? '#ff6b35' }};">{{ $avatarInitial ?? mb_substr($nickname, 0, 1) }}</span>
+      @endif
+    </div>
     <div class="hero-tag">{{ $isAdmin ? '👑 ' . __('管理者') : '👤 ' . __('一般会員') }}</div>
     <h1>{{ $nickname }}<span class="grad">{{ __('のレビュー履歴') }}</span></h1>
     <div class="hero-stats" style="margin-top:1.5rem;">

@@ -34,9 +34,14 @@
       </div>
     @endif
 
-    <div class="section-header">
+    <div class="section-header" style="flex-wrap:wrap;gap:0.75rem;">
       <div class="section-title">{{ __('登録会員一覧') }}（{{ $totalCount }}）</div>
-      <a href="/foodlog/" class="back-btn">{{ __('← ホームへ戻る') }}</a>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;">
+        <a href="/foodlog/admin/export/restaurants.csv" class="admin-action-btn" style="text-decoration:none;">📥 {{ __('店舗CSV') }}</a>
+        <a href="/foodlog/admin/export/reviews.csv" class="admin-action-btn" style="text-decoration:none;">📥 {{ __('レビューCSV') }}</a>
+        <a href="/foodlog/admin/reviews" class="admin-action-btn" style="text-decoration:none;">📝 {{ __('レビュー監視') }}</a>
+        <a href="/foodlog/" class="back-btn">{{ __('← ホームへ戻る') }}</a>
+      </div>
     </div>
 
     <div class="admin-table-wrap">
@@ -60,7 +65,12 @@
               <td>
                 @if(!$m->delete_flg)
                   <a href="/foodlog/users/{{ $m->id }}" class="review-author review-author-link">
-                    {{ $m->isAdmin() ? '👑' : '👤' }} {{ $m->nickname }}
+                    @if($m->avatar)
+                      <img src="/foodlog/{{ $m->avatar }}" alt="" class="avatar-img avatar-xs" />
+                    @else
+                      <span class="avatar-initial avatar-xs" style="background:{{ $m->avatarColor() }};">{{ $m->avatarInitial() }}</span>
+                    @endif
+                    <span>{{ $m->nickname }}</span>
                   </a>
                 @else
                   <span>{{ $m->nickname }}</span>
